@@ -38,8 +38,14 @@ public sealed class HelperLauncher : IHelperProcess
     /// <summary>
     /// Files shipped inside BlurLink.exe (portable) and staged to the bin dir:
     /// the helper plus the WinDivert runtime. Resource name → file name.
+    /// Defaults to the Desktop layout; shells re-point this at startup via
+    /// <see cref="ConfigureResources"/> (portable staging silently no-ops
+    /// otherwise, because this assembly itself embeds nothing).
     /// </summary>
-    public static readonly IReadOnlyDictionary<string, string> EmbeddedFiles =
+    public static IReadOnlyDictionary<string, string> EmbeddedFiles => _resourceFiles;
+
+    /// <summary>Desktop shell layout: resources live in the Desktop assembly.</summary>
+    public static readonly IReadOnlyDictionary<string, string> DesktopEmbeddedFiles =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["BlurLink.Desktop.Native.blurlink-net.exe"] = BlurLinkConstants.HelperExeName,
@@ -47,15 +53,44 @@ public sealed class HelperLauncher : IHelperProcess
             ["BlurLink.Desktop.Native.WinDivert64.sys"] = "WinDivert64.sys",
         };
 
+    /// <summary>Avalonia shell layout (embedded from M4; until then the keys
+    /// simply match nothing and staging no-ops, like a Desktop dev build).</summary>
+    public static readonly IReadOnlyDictionary<string, string> ShellEmbeddedFiles =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["BlurLink.Shell.Native.blurlink-net.exe"] = BlurLinkConstants.HelperExeName,
+            ["BlurLink.Shell.Native.WinDivert.dll"] = "WinDivert.dll",
+            ["BlurLink.Shell.Native.WinDivert64.sys"] = "WinDivert64.sys",
+        };
+
+    /// <summary>Assembly embedded bridge files are resolved against. Each shell
+    /// sets its own at startup; the default keeps existing callers working.</summary>
+    public static System.Reflection.Assembly ResourceAssembly { get; private set; } =
+        typeof(HelperLauncher).Assembly;
+
+    private static IReadOnlyDictionary<string, string> _resourceFiles = DesktopEmbeddedFiles;
+
+    /// <summary>
+    /// Points embedded-resource resolution at the calling shell's assembly and
+    /// file map. Called once at shell startup, before any staging query.
+    /// </summary>
+    public static void ConfigureResources(
+        System.Reflection.Assembly assembly,
+        IReadOnlyDictionary<string, string> files)
+    {
+        ResourceAssembly = assembly;
+        _resourceFiles = files;
+    }
+
     public const string EmbeddedHelperResource = "BlurLink.Desktop.Native.blurlink-net.exe";
 
     public static bool HasEmbeddedHelper
-        => typeof(HelperLauncher).Assembly.GetManifestResourceNames().Contains(EmbeddedHelperResource);
+        => ResourceAssembly.GetManifestResourceNames().Contains(EmbeddedHelperResource);
 
     /// <summary>All bridge files embedded (helper + WinDivert runtime)?</summary>
     public static bool HasEmbeddedBridgeFiles
-        => EmbeddedFiles.Keys.All(k =>
-            typeof(HelperLauncher).Assembly.GetManifestResourceNames().Contains(k));
+        => _resourceFiles.Keys.All(k =>
+            ResourceAssembly.GetManifestResourceNames().Contains(k));
 
     /// <summary>Side-by-side dev layout: helper next to the GUI exe.</summary>
     public static string SideBySidePath()
@@ -101,12 +136,12 @@ public sealed class HelperLauncher : IHelperProcess
     /// </summary>
     public static string EnsureStagedBinaries()
     {
-        var asm = typeof(HelperLauncher).Assembly;
+        var asm = ResourceAssembly;
         var names = asm.GetManifestResourceNames();
         var staged = new List<string>();
         string helperPath = Path.Combine(BinDir(), BlurLinkConstants.HelperExeName);
 
-        foreach (var (resource, file) in EmbeddedFiles)
+        foreach (var (resource, file) in _resourceFiles)
         {
             if (!names.Contains(resource, StringComparer.Ordinal))
             {

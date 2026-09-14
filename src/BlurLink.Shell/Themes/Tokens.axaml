@@ -30,7 +30,10 @@
   <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
   <FontFamily x:Key="MonoFont">Cascadia Code, Consolas</FontFamily>
   <x:Double x:Key="FontSizeSmall">11.5</x:Double>
-  <x:Double x:Key="CornerRadius">9</x:Double>
+  <!-- CornerRadius-typed (not Double): every consumer is a CornerRadius
+       property setter, and a Double value crashes style attach at runtime
+       (first headed window). See Task 4 report. -->
+  <CornerRadius x:Key="CornerRadius">9</CornerRadius>
   <x:Double x:Key="Space1">4</x:Double>
   <x:Double x:Key="Space2">8</x:Double>
   <x:Double x:Key="Space3">12</x:Double>

@@ -1,7 +1,69 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BlurLink.Shell.ViewModels"
+        xmlns:notif="using:BlurLink.Shell.Notifications"
         x:Class="BlurLink.Shell.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
         Title="BlurLink" Width="1080" Height="720" MinWidth="880" MinHeight="600"
         WindowStartupLocation="CenterScreen" Icon="/Assets/app.ico">
-  <TextBlock Text="BlurLink" Margin="24" FontSize="15" FontWeight="SemiBold" />
+  <Grid RowDefinitions="Auto,*,Auto">
+    <Border Grid.Row="0" Padding="20,14" Background="{StaticResource Sidebar}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+          <Border Width="30" Height="30" CornerRadius="9" Background="{StaticResource AccentDim}">
+            <TextBlock Text="B" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Accent}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+            <TextBlock Text="BlurLink" FontSize="15" FontWeight="SemiBold" />
+            <TextBlock Text="LAN discovery bridge" FontSize="10.5" Classes="faint" />
+          </StackPanel>
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Center" Margin="20,0,0,0">
+          <Button Content="Join" Classes="nav active" Command="{Binding NavigateCommand}" CommandParameter="Join"
+                  AutomationProperties.Name="Join tab" />
+        </StackPanel>
+        <Border DockPanel.Dock="Right" CornerRadius="999" Padding="13,6" HorizontalAlignment="Right" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal">
+            <Ellipse x:Name="StatusDot" Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center" Fill="{StaticResource Muted}" />
+            <TextBlock Text="{Binding StatusChipText}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+      </DockPanel>
+    </Border>
+    <ScrollViewer Grid.Row="1" Margin="28,22,28,10">
+      <StackPanel Spacing="12">
+        <ItemsControl ItemsSource="{Binding Notices.Notices}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="notif:Notice">
+              <Border Classes="card" Padding="12">
+                <DockPanel LastChildFill="True">
+                  <Button DockPanel.Dock="Right" Content="Dismiss" Classes="quiet"
+                          x:CompileBindings="False"
+                          Command="{Binding $parent[ItemsControl].DataContext.Notices.DismissCommand}"
+                          CommandParameter="{Binding}"
+                          AutomationProperties.Name="Dismiss notice" />
+                  <StackPanel>
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Classes="faint" />
+                  </StackPanel>
+                </DockPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <ContentControl Content="{Binding CurrentPane}" />
+      </StackPanel>
+    </ScrollViewer>
+    <Border Grid.Row="2" Background="{StaticResource Sidebar}" Padding="20,8">
+      <DockPanel LastChildFill="False">
+        <TextBlock DockPanel.Dock="Left" Text="{Binding StatusBar}" Classes="faint" FontSize="11.5" VerticalAlignment="Center" />
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <TextBlock Text="{Binding Join.Session.RawCounters}" Classes="mono faint" FontSize="10.5" VerticalAlignment="Center" />
+          <Button Content="Copy diagnostics" Classes="quiet" Command="{Binding CopyDiagnosticsCommand}" Margin="14,0,0,0"
+                  AutomationProperties.Name="Copy diagnostics" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+  </Grid>
 </Window>

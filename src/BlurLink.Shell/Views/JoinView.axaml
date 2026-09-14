@@ -1,0 +1,172 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BlurLink.Shell.ViewModels"
+             xmlns:net="using:BlurLink.Core.Net"
+             xmlns:conv="using:BlurLink.Shell.Converters"
+             x:Class="BlurLink.Shell.Views.JoinView"
+             x:DataType="vm:JoinViewModel">
+  <StackPanel MaxWidth="720">
+    <TextBlock Text="Join a friend's lobby" Classes="h1" Margin="0,4,0,6" />
+    <TextBlock Classes="faint" Margin="0,0,0,20"
+               Text="Enter your friend's overlay IP, start the bridge, then open Blur's LAN list." />
+
+    <!-- ============ Connect card ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="CONNECTION" Classes="label" />
+        <Grid ColumnDefinitions="*,14,*">
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="Host overlay IP" Classes="label" />
+            <TextBox Text="{Binding Settings.HostIp}" MaxLength="15"
+                     FontFamily="{StaticResource MonoFont}" FontSize="15" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="Your overlay adapter" Classes="label" />
+            <ComboBox ItemsSource="{Binding Settings.Adapters}" SelectedItem="{Binding Settings.SelectedAdapter}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="net:AdapterInfo">
+                  <TextBlock Text="{Binding FriendlyName}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+              <ComboBox.SelectionBoxItemTemplate>
+                <DataTemplate x:DataType="net:AdapterInfo">
+                  <TextBlock Text="{Binding FriendlyName}" />
+                </DataTemplate>
+              </ComboBox.SelectionBoxItemTemplate>
+            </ComboBox>
+          </StackPanel>
+        </Grid>
+
+        <!-- Pre-flight checklist -->
+        <Border Margin="0,16,0,0" Padding="14,12" CornerRadius="12"
+                Background="{StaticResource Sidebar}" BorderBrush="{StaticResource Border}" BorderThickness="1">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <Grid Width="9" Height="9" Margin="0,0,9,0" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{StaticResource Muted}" />
+                <Ellipse Width="9" Height="9" Fill="{StaticResource Success}"
+                         IsVisible="{Binding Session.BridgeRunning}" />
+                <Ellipse Width="9" Height="9" Fill="{StaticResource Success}"
+                         IsVisible="{Binding Settings.PreflightReady}" />
+              </Grid>
+              <TextBlock Text="{Binding Settings.PreflightSummary}" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding Settings.PreflightItems}" Margin="18,8,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:PreflightItem">
+                  <StackPanel Orientation="Horizontal" Margin="0,2.5">
+                    <TextBlock Text="✓" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,7,0"
+                               Foreground="{StaticResource Success}" IsVisible="{Binding Ok}" />
+                    <TextBlock Text="○" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,7,0"
+                               Foreground="{StaticResource Faint}" IsVisible="{Binding !Ok}" />
+                    <TextBlock Text="{Binding Label}" FontSize="12" VerticalAlignment="Center" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <TextBlock Text="{Binding Settings.RouteWarning}" Foreground="{StaticResource Danger}"
+                   FontSize="12" Margin="0,10,0,0"
+                   IsVisible="{Binding Settings.RouteWarning, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+
+        <WrapPanel Margin="0,16,0,0">
+          <Button x:Name="StartStopButton" Content="Start Bridge" Command="{Binding Session.StartStopCommand}"
+                  Classes="primary" Padding="30,12" FontSize="14"
+                  IsVisible="{Binding Session.ShowStart}" />
+          <Button Content="Stop Bridge" Command="{Binding Session.StartStopCommand}"
+                  Classes="danger" Padding="30,12" FontSize="14"
+                  IsVisible="{Binding Session.BridgeRunning}" />
+          <Button Content="Force kill" Command="{Binding Session.ForceKillCommand}"
+                  Classes="danger"
+                  IsVisible="{Binding Session.ShowForceKill}" />
+          <Button Content="Launch Blur" Command="{Binding Session.LaunchBlurCommand}" />
+        </WrapPanel>
+
+        <TextBlock Text="{Binding Session.Message}" Foreground="{StaticResource Accent}" Margin="0,10,0,0"
+                   IsVisible="{Binding Session.Message, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+        <TextBlock Text="{Binding Session.BlurStatus}" Classes="faint"
+                   FontSize="12" Margin="0,2,0,0"
+                   IsVisible="{Binding Session.BlurStatus, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+        <TextBlock Text="{Binding Sniff.RepliesSummary}" Foreground="{StaticResource Success}"
+                   FontSize="12" Margin="0,2,0,0"
+                   IsVisible="{Binding Sniff.RepliesSummary, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+        <TextBlock x:Name="StoryHeadline" Text="{Binding Session.Story.Headline}" FontWeight="SemiBold" Margin="0,10,0,0" />
+        <TextBlock Text="{Binding Session.Story.Detail}" TextWrapping="Wrap" Margin="0,2,0,0" />
+        <TextBlock Text="{Binding Session.Story.SuggestedAction}" TextWrapping="Wrap" Opacity="0.8" Margin="0,2,0,0"
+                   IsVisible="{Binding Session.Story.SuggestedAction, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+        <Expander Header="Counters" Margin="0,8,0,0">
+          <TextBlock Text="{Binding Session.RawCounters}" FontFamily="{StaticResource MonoFont}" />
+        </Expander>
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Advanced card ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="ADVANCED" Classes="label" />
+
+        <!-- Port detector -->
+        <Border Background="{StaticResource Sidebar}" BorderBrush="{StaticResource Border}"
+                BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="0,0,0,14">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+              <TextBlock Text="🔍" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center" />
+              <TextBlock Text="Don't know the discovery port?" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Classes="faint" FontSize="12" Margin="0,2,0,10"
+                       Text="Listen for 15 seconds while you refresh Blur's LAN list. Nothing is changed or blocked while listening." />
+            <WrapPanel>
+              <Button Content="Detect discovery port" Command="{Binding Sniff.DetectCommand}" />
+              <Button Content="Stop listening" Command="{Binding Sniff.StopSniffCommand}" />
+              <Button Content="Listen for replies" Command="{Binding Sniff.ListenRepliesCommand}" />
+            </WrapPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+              <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
+                       Fill="{StaticResource Accent}"
+                       IsVisible="{Binding Sniff.SniffRunning}" />
+              <TextBlock Text="{Binding Sniff.SniffStatus}" Foreground="{StaticResource Accent}"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding Sniff.SniffStatus, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+            </StackPanel>
+            <Button Content="{Binding Sniff.SniffCandidate, StringFormat='Use port {0}'}"
+                    Command="{Binding Sniff.ApplySniffCommand}"
+                    IsVisible="{Binding Sniff.ShowApplySniff}"
+                    Margin="0,10,0,0" HorizontalAlignment="Left" />
+          </StackPanel>
+        </Border>
+
+        <!-- Tune fields -->
+        <Grid ColumnDefinitions="*,14,*">
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="Discovery UDP port" Classes="label" />
+            <TextBox Text="{Binding Settings.DiscoveryPort}" MaxLength="5"
+                     FontFamily="{StaticResource MonoFont}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="Broadcast destination" Classes="label" />
+            <TextBox Text="{Binding Settings.BroadcastDestination}" MaxLength="15"
+                     FontFamily="{StaticResource MonoFont}" />
+          </StackPanel>
+        </Grid>
+        <TextBlock Text="Payload signature hex (optional)" Classes="label" />
+        <TextBox Text="{Binding Settings.PayloadHex}" MaxLength="191"
+                 FontFamily="{StaticResource MonoFont}" />
+        <CheckBox Content="Keep physical LAN working (recommended)" IsChecked="{Binding Settings.PreserveBroadcast}"
+                  Margin="0,14,0,0" />
+        <CheckBox Content="Stop bridge when Blur exits" IsChecked="{Binding Session.StopWhenBlurExits}"
+                  Margin="0,2" />
+
+        <TextBlock Text="Active filter" Classes="label" Margin="1,14,0,7" />
+        <TextBox Text="{Binding Session.ActiveFilter, Mode=OneWay}" IsReadOnly="True"
+                 FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+        <TextBlock Text="Recent packets (metadata only)" Classes="label" Margin="1,10,0,7" />
+        <ListBox ItemsSource="{Binding Session.RecentEvents}" Height="130"
+                 FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+        <Button Content="Refresh adapters" Command="{Binding Settings.RefreshAdaptersCommand}"
+                Classes="quiet" HorizontalAlignment="Left" Margin="0,12,0,0" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

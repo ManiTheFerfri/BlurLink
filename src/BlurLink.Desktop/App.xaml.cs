@@ -40,6 +40,11 @@ public partial class App : Application
             return;
         }
 
+        // Embedded bridge files live in this assembly (Native/*); point the
+        // launcher at them explicitly — it resolves against the Platform
+        // assembly by default, where the Desktop resource names match nothing.
+        HelperLauncher.ConfigureResources(typeof(App).Assembly, HelperLauncher.DesktopEmbeddedFiles);
+
         // MainWindow is created here (no StartupUri) so an unsupported
         // architecture can exit before any window ever appears.
         var window = new MainWindow();
