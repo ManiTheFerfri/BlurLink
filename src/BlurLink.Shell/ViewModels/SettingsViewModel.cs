@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using BlurLink.Contracts;
 using BlurLink.Core.Config;
 using BlurLink.Core.Diagnostics;
@@ -72,6 +73,29 @@ public sealed class SettingsViewModel : ShellViewModelBase
         "1) On your own LAN with BlurLink off, capture Blur's LAN refresh in Wireshark.\n" +
         "2) Note the UDP destination port, broadcast address, and whether the host reply embeds a LAN IP.\n" +
         "3) Enter the verified values in Join → Advanced.";
+
+    /// <summary>
+    /// About line bound by the Settings view. Reads the Shell assembly
+    /// version at runtime so the user-visible version can never drift
+    /// behind the csproj <c>&lt;Version&gt;</c> again.
+    /// </summary>
+    public string AboutVersion
+    {
+        get
+        {
+            var version = typeof(SettingsViewModel).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3)
+                ?? "0.2.0";
+            var plus = version.IndexOf('+');
+            if (plus >= 0)
+            {
+                version = version[..plus];
+            }
+
+            return $"BlurLink {version} · MIT · No backend, no telemetry, no payload logging. Join mode uses WinDivert (LGPLv3/GPLv2, bundled).";
+        }
+    }
 
     public RelayCommand BrowseCommand { get; }
     public RelayCommand SaveCommand { get; }

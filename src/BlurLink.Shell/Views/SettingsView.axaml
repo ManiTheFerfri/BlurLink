@@ -75,7 +75,7 @@
         <TextBlock Text="{Binding ResearchSteps, Mode=OneWay}" FontSize="12"
                    Classes="faint" TextWrapping="Wrap" />
         <TextBlock Classes="faint" FontSize="12" Margin="0,12,0,0" TextWrapping="Wrap"
-                   Text="BlurLink 0.1.0 · MIT · No backend, no telemetry, no payload logging. Join mode uses WinDivert (LGPLv3/GPLv2, bundled)." />
+                   Text="{Binding AboutVersion, Mode=OneWay}" />
       </StackPanel>
     </Border>
   </StackPanel>
