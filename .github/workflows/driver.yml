@@ -1,0 +1,75 @@
+name: driver
+
+# Task 5 experiment: can the elevated WinDivert harness run on GitHub-hosted
+# runners? Unknown until tried (Spec D5). Three honest outcomes — runs,
+# cannot-run, fails — and none is a pass faked: the verdict step below only
+# counts the workflow-written marker line, never harness chatter.
+#
+# NOTE (2026-09-14): the brief mentions consuming -PreflightOnly from Task 6,
+# but the spec'd YAML never passes that flag and Task 6 is not implemented
+# yet — so this workflow passes no such flag. Nothing to reconcile.
+#
+# DEVIATION from the task-5 brief's YAML (2026-09-14, deliberate): the brief
+# writes "exit=$LASTEXITCODE" and matches it unanchored (-match 'exit=0').
+# That misreads a failing run as `runs`: the harness itself prints
+# "PASS helper-exits-on-shutdown exit=0" (scripts/test-e2e.ps1) whenever that
+# final check passes — including runs where earlier checks FAILED (the script
+# throws at the end, exit 1, but the PASS line is already in the log). The
+# marker is therefore renamed to "harness-exit=" and matched anchored
+# (^harness-exit=0$, multiline) so ONLY the workflow-written line counts.
+# Three-way semantics are unchanged: runs = pass, cannot-run = recorded
+# outcome (exit 0), fails = real failure (exit 1).
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/BlurLink.Net/**'
+      - 'scripts/test-e2e.ps1'
+      - 'tools/hostsim/**'
+      - '.github/workflows/driver.yml'
+
+jobs:
+  driver-harness:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build the helper (MSVC x64)
+        run: |
+          cmake -S src/BlurLink.Net -B out/native -DCMAKE_BUILD_TYPE=Release
+          cmake --build out/native --config Release
+      - name: Build the injector
+        run: |
+          cmake -S tools/hostsim -B out/hostsim -DCMAKE_BUILD_TYPE=Release
+          cmake --build out/hostsim --config Release
+      - name: Run the elevated harness
+        id: harness
+        shell: pwsh
+        run: |
+          $exe = 'out/native/Release/blurlink-net.exe'
+          $sim = 'out/hostsim/Release/hostsim.exe'
+          try {
+            scripts/test-e2e.ps1 -HelperExe $exe -SimExe $sim 2>&1 |
+              Tee-Object -FilePath out/driver-run.log
+            "harness-exit=$LASTEXITCODE" | Out-File -Append out/driver-run.log
+          } catch {
+            $_ | Out-String | Out-File -Append out/driver-run.log
+            "harness-exit=exception" | Out-File -Append out/driver-run.log
+          }
+          Get-Content out/driver-run.log | Select-Object -Last 40
+      - name: Record the verdict
+        shell: pwsh
+        run: |
+          $log = Get-Content -Raw out/driver-run.log -ErrorAction SilentlyContinue
+          if ($log -match '(?m)^harness-exit=0\s*$') { Write-Host 'VERDICT: runs (all checks passed)' }
+          elseif ($log -match 'CANNOT RUN') { Write-Host 'VERDICT: cannot-run (environment refuses elevation or the driver)'; exit 0 }
+          else { Write-Host 'VERDICT: fails (the harness ran and reported failures)'; exit 1 }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: driver-run-log
+          path: out/driver-run.log
