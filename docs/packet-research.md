@@ -31,13 +31,13 @@ traffic on the discovery port, run while the game was believed to be on its
 lobby screen, caught **eight packets**:
 
 ```
-out 10.88.14.114:50001 -> 255.255.255.255:50001 len=52 id=32748
+out 10.0.0.10:50001 -> 255.255.255.255:50001 len=52 id=32748
     payload=0f0000000000002c01000000 753eae27f6b82f50 01000000
-out 10.88.14.114:50001 -> 255.255.255.255:50001 len=52 id=32749
+out 10.0.0.10:50001 -> 255.255.255.255:50001 len=52 id=32749
     payload=0f0000000000002c01000000 6a90dc53334ea787 01000000
-out 10.88.14.114:50001 -> 255.255.255.255:50001 len=52 id=32750
+out 10.0.0.10:50001 -> 255.255.255.255:50001 len=52 id=32750
     payload=0f0000000000002c01000000 ab0070bf639e81b4 01000000
-out 10.88.14.114:50001 -> 255.255.255.255:50001 len=52 id=32751
+out 10.0.0.10:50001 -> 255.255.255.255:50001 len=52 id=32751
     payload=0f0000000000002c01000000 997a8c25692f3795 01000000
 (each of the four was captured twice, byte-identical, same IP ID)
 ```
@@ -48,8 +48,8 @@ The interval matters more than the count, and this is the first run that could
 measure it:
 
 ```
-+4.430s  out 10.88.14.114:50001 -> 255.255.255.255:50001 id=32754  (seen twice)
-+13.352s out 10.88.14.114:50001 -> 255.255.255.255:50001 id=32755  (seen twice)
++4.430s  out 10.0.0.10:50001 -> 255.255.255.255:50001 id=32754  (seen twice)
++13.352s out 10.0.0.10:50001 -> 255.255.255.255:50001 id=32755  (seen twice)
 +45.013s capture ended -- nothing in between
 ```
 
@@ -180,12 +180,12 @@ Two consequences worth keeping:
 
 ## Finding: the real discovery request, byte for byte (2026-09-12, measured)
 
-Captured live from a **searching** Blur (the joiner side) on `PacketRaft-LAN`
-(`10.88.14.114`), Blur.exe PID 15832, while the Find Game screen was open.
+Captured live from a **searching** Blur (the joiner side) on `Example-Overlay-LAN`
+(`10.0.0.10`), Blur.exe PID 12345, while the Find Game screen was open.
 This is the first genuine game payload observed rather than a stand-in:
 
 ```
-out 10.88.14.114:50001 -> 255.255.255.255:50001  len=52  id=32739
+out 10.0.0.10:50001 -> 255.255.255.255:50001  len=52  id=32739
   payload (24 bytes)
   0f0000000000002c010000008a656eb70adfd31801000000
 ```
@@ -193,7 +193,7 @@ out 10.88.14.114:50001 -> 255.255.255.255:50001  len=52  id=32739
 What this settles and what it changes:
 
 - **The destination is the LIMITED broadcast `255.255.255.255`**, not the
-  subnet-directed `10.88.14.255`. A capture filtered on the /24 broadcast
+  subnet-directed `10.0.0.255`. A capture filtered on the /24 broadcast
   matches nothing — which is exactly what happened in a first attempt, whose
   stage spent its whole 45s window finding zero packets.
 - **Source port `50001` == destination port `50001`.** The searcher broadcasts
@@ -211,7 +211,7 @@ What this settles and what it changes:
 - **The same 24 bytes carry no ASCII text at all**, so there is nothing here to
   read as a server name. `0f` (15) leads; a `01 00 00 00` word appears twice.
   One 4-byte field, `0adfd318`, parses as the IPv4 address `10.223.211.24` —
-  **not** this machine's own LAN address (`10.88.14.114`), so in the *request*
+  **not** this machine's own LAN address (`10.0.0.10`), so in the *request*
   the field is not the sender's address. What it is remains unknown, and the
   embedded-address question that matters is about the host's **reply**, which
   we have still never seen. Do not build on this field.
@@ -228,18 +228,18 @@ A capture of 4+ packets would settle which explanation holds.
 
 **This is the single most important capture in the project so far.** It is the
 first time any part of host mode's premise has been observed in real game code.
-Replaying the captured query as an inbound packet (source `10.88.14.200:50001`,
-destination this machine `10.88.14.114:50001`) made the local hosting Blur
+Replaying the captured query as an inbound packet (source `10.0.0.200:50001`,
+destination this machine `10.0.0.10:50001`) made the local hosting Blur
 answer:
 
 ```
-out 10.88.14.114:50001 -> 10.88.14.200:50001  len=188  id=38506
+out 10.0.0.10:50001 -> 10.0.0.200:50001  len=188  id=38506
   payload (160 bytes)
   0f0000000000002c020000008a656eb70adfd31800000000c41e678600000000
-  cc430441f35614e300f85c02050000004d0061006e0069000000000000000000
+  cc430441f35614e300f85c020500000048006f00730074000000000000000000
   0000000000000000000000000000000000000e00193555770000000000000000
-  cfb116d1397e9b89c993e643cf6784dba390b6708e7ef493c0a80174020c0a58
-  0e72020c00ff00ff000000ff00ff000001140177000000000b000201a837ef2d
+  cfb116d1397e9b89c993e643cf6784dba390b6708e7ef493c0a8000a020c0a00
+  000a020c00ff00ff000000ff00ff000001140177000000000b000201a837ef2d
 ```
 
 ### What the envelope proves (the design's two assumptions)
@@ -250,7 +250,7 @@ one 2026-09-09 capture. Both are now confirmed against real game code:
 - **The host answers FROM the discovery port.** Source is `50001`, not an
   ephemeral port. Assumption (a): **confirmed.**
 - **The host answers TO the port it was queried from, on the querying address,
-  by unicast.** Destination is `10.88.14.200:50001` — exactly the injected
+  by unicast.** Destination is `10.0.0.200:50001` — exactly the injected
   source. Assumption (b): **confirmed.** It does *not* broadcast its answer.
 
 The second point is why host mode exists, and the reason is now visible rather
@@ -268,9 +268,9 @@ The reply is the query's own format, extended. Byte offsets into the 160:
 | 0x04 | `0000002c` | same as the query |
 | 0x08 | `02000000` | **the query had `01000000` — message type 1 → 2** |
 | 0x0C | `8a656eb7 0adfd318` | **echoed verbatim from the query** |
-| 0x30 | `4d0061006e0069 00` | **UTF-16LE host name: "Mani"** |
-| 0x78 | `c0a80174` `020c` | **`192.168.1.116:3074` — this machine's Ethernet address** |
-| 0x7E | `0a580e72` `020c` | **`10.88.14.114:3074` — this machine's overlay address** |
+| 0x30 | `48006f00730074 00` | **UTF-16LE host name: "Host"** |
+| 0x78 | `c0a8000a` `020c` | **`192.168.0.10:3074` — this machine's Ethernet address** |
+| 0x7E | `0a00000a` `020c` | **`10.0.0.10:3074` — this machine's overlay address** |
 
 The fields at 0x0C are a **request correlation token**: the host echoes the 8
 bytes it received, so the searcher can match an answer to its question. The two
@@ -292,8 +292,8 @@ searcher where to connect.
 This does **not** automatically mean payload rewriting is required, and it
 should not be read that way. Note *which* two addresses it lists:
 
-- `192.168.1.116:3074` — the physical LAN address, unreachable from the friend.
-- `10.88.14.114:3074` — **the overlay address**, i.e. the address the friend's
+- `192.168.0.10:3074` — the physical LAN address, unreachable from the friend.
+- `10.0.0.10:3074` — **the overlay address**, i.e. the address the friend's
   machine can reach across the tunnel, on the virtual LAN they already share.
 
 So the reply already advertises an address the friend can reach. Whether Blur
@@ -348,10 +348,10 @@ Every injection ever made, and every answer ever seen:
 
 | when | token | player | arrival | reply |
 |---|---|---|---|---|
-| 17:15 | real | `10.88.14.200` | overlay | **answered** |
-| 17:15 | real | `192.168.1.200` | Ethernet | none |
+| 17:15 | real | `10.0.0.200` | overlay | **answered** |
+| 17:15 | real | `192.168.0.200` | Ethernet | none |
 | 17:17 | synthetic ×2 | three players | both | none |
-| 17:22 | real | `10.88.14.200`, `.201` | overlay | none |
+| 17:22 | real | `10.0.0.200`, `.201` | overlay | none |
 | 17:25 | real | `.210`, `.211`, `.212` | overlay | none |
 
 **Exactly one answer, to the first injection, and never again.** The unifying

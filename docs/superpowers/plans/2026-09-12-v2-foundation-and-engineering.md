@@ -130,7 +130,9 @@ Expected: two commits; the working tree clean.
 
 The spec (D7, §8.1) makes the repo public, and the docs currently contain the
 author's real addresses, network name, process IDs and host name — including the
-host name inside a captured payload's hex (`4d0061006e0069`).
+host name inside a captured payload's hex (UTF-16, scrubbed length-preserving;
+see `docs/privacy-scrub.md` for kinds and `scripts/check-docs-privacy.ps1` for
+the exact banned map, intentionally not repeated here).
 
 **Files:**
 - Modify: `docs/packet-research.md`, `TODO.md`, `README.md`, `docs/user-guide.md`, `docs/capture-day-checklist.md`, `docs/troubleshooting.md`, `scripts/test-e2e.ps1`, `tools/hostsim/hostsim.cpp` (comments only)
@@ -145,19 +147,23 @@ host name inside a captured payload's hex (`4d0061006e0069`).
 - [ ] **Step 1: Record the scrub rule in `docs/privacy-scrub.md`**
 
 The rule from the spec: **structure, offsets and byte layout stay; identifiers are
-replaced.** Table of every literal and its replacement:
+replaced.** Kinds and replacements (live literals intentionally not quoted here —
+they would reintroduce them; the exact banned map lives only in
+`scripts/check-docs-privacy.ps1`, which the checker itself skips):
 
-| Literal kind | Example as found | Replacement |
+| Literal kind | As found (kind, not quoted) | Replacement |
 |---|---|---|
-| Overlay address | `10.88.14.114`, `10.88.14.200` | `10.0.0.10`, `10.0.0.200` |
-| Physical LAN address | `192.168.1.116`, `192.168.1.200` | `192.168.0.10`, `192.168.0.200` |
+| Overlay address | author overlay addresses (two, on the author's /24) | `10.0.0.10`, `10.0.0.200` |
+| Physical LAN address | author physical LAN addresses (two) | `192.168.0.10`, `192.168.0.200` |
 | Overlay network name | the author's overlay name | `Example-Overlay` |
-| Host name in payload hex | `4d0061006e0069` (UTF-16 `Mani`) | `48006f0073007400` (UTF-16 `Host`) |
-| Game process id | `15832` | `12345` |
-| Machine name | `Mani` | `Author` |
+| Host name in payload hex | author host name in payload hex (UTF-16, length-preserving) | `48006f0073007400` (UTF-16 `Host`) |
+| Game process id | author game process id | `12345` |
+| Machine name | author machine name | `Author` |
 | Adapter names | the author's adapter names | `Ethernet`, `Example-Overlay` |
 
-Payload hex must keep its length: a 5-character name stays a 5-character name.
+*(Scrubbed 2026-09-14 for privacy: this table previously quoted live literals.
+It now describes them by kind. Payload hex keeps its length: a 4-character name
+stays a 4-character name.)*
 
 - [ ] **Step 2: Apply the scrub**
 
@@ -165,9 +171,13 @@ Search and replace each literal across the listed files. Read every hunk: the
 rule requires that offsets, lengths and the surrounding prose stay true, so a
 replacement that changes a byte count is wrong.
 
-Run this to find candidates:
+Run this to find candidates (broad prefix search for the author's /24s; the
+exact overlay-name / game-PID / operator-name / payload-hex literals are listed
+only in `scripts/check-docs-privacy.ps1` and intentionally not repeated here):
 ```bash
-grep -rn "10\.88\.14\.\|192\.168\.1\.\|PacketRaft\|15832\|Mani" --include='*.md' --include='*.ps1' --include='*.cpp' --include='*.json' . | grep -v '^./out/' | grep -v '^./bin/'
+grep -rn "10\.88\.14\.\|192\.168\.1\." --include='*.md' --include='*.ps1' --include='*.cpp' --include='*.json' . | grep -v '^./out/' | grep -v '^./bin/'
+# plus the exact banned map from scripts/check-docs-privacy.ps1 (exact author
+# identifiers only, not prefixes — see Task 2 controller rulings).
 ```
 
 - [ ] **Step 3: Write the checker**
@@ -186,16 +196,28 @@ param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = 'Stop'
 
 # literal -> why it must not return (docs/privacy-scrub.md)
-$banned = [ordered]@{
-  '10.88.14.'    = 'author overlay address'
-  '192.168.1.'   = 'author physical LAN address'
-  'PacketRaft'   = 'author overlay network name'
-  '4d0061006e0069' = 'author host name inside captured payload hex'
-  '15832'        = 'author game process id'
-}
+# NOTE (scrubbed 2026-09-14): the enforced checker bans EXACT author identifiers
+# only (not prefixes — prefixes collide with synthetic fixtures), across every
+# tracked file. The exact banned map lives only in
+# scripts/check-docs-privacy.ps1 (which the checker skips); it is intentionally
+# not repeated here so this plan stays clean. Shape:
+#   '<author-overlay-1>'  = 'author overlay address'
+#   '<author-overlay-2>'  = 'author overlay address'
+#   '<author-lan-1>'      = 'author physical LAN address'
+#   '<author-lan-2>'      = 'author physical LAN address'
+#   '<overlay-product>'   = 'author overlay network name'
+#   '<payload-host-hex>'  = 'author host name inside captured payload hex'
+#   '<payload-lan-hex>'   = 'author LAN address inside captured payload hex'
+#   '<payload-ol-hex>'    = 'author overlay address inside captured payload hex'
+#   '<game-pid>'          = 'author game process id'
+#   '<operator-name>'     = 'author machine name (word-boundary match)'
+$banned = [ordered]@{}
 
 $extensions = @('.md', '.ps1', '.cpp', '.h', '.json', '.cs', '.xaml', '.csproj')
-$skipDirs   = @('out', 'dist', 'bin', 'obj', '.git', 'third-party')
+$skipDirs   = @('out', 'dist', 'bin', 'obj', '.git', 'third-party', '.superpowers')
+# '.superpowers' covers the git-ignored SDD scratch dir (.superpowers/sdd),
+# same class as out/dist. Operator-name matching uses word boundaries so
+# Manifest/GetManifestResourceNames never match (see controller rulings).
 
 $violations = foreach ($file in Get-ChildItem -Path $Root -Recurse -File |
     Where-Object { $extensions -contains $_.Extension }) {
@@ -223,9 +245,11 @@ exit 0
 Run: `pwsh -NoProfile -File scripts/check-docs-privacy.ps1`
 Expected: `privacy-ok`, exit 0.
 
-Then temporarily add the line `10.88.14.114` to `README.md`, run again, expect a
-`README.md:<n>: 10.88.14.  (author overlay address)` line and exit 1, then remove
-the line and confirm the pass returns.
+Then temporarily add one banned exact overlay address (see the banned map in
+`scripts/check-docs-privacy.ps1` for the literal; intentionally not quoted here)
+to `README.md`, run again, expect a
+`README.md:<n>: <banned overlay address> (author overlay address)` line and exit 1,
+then remove the line and confirm the pass returns.
 
 - [ ] **Step 5: Commit**
 

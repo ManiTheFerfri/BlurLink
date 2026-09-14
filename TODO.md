@@ -340,7 +340,7 @@ the live result pointed at the IP ID rather than at the cache.
 
 ### Live session against the real game, 2026-09-12 — what it proved
 
-One machine, real Blur (PID 15832), real WinDivert, real packets. Four results,
+One machine, real Blur (PID 12345), real WinDivert, real packets. Four results,
 in the order they matter:
 
 1. **A searching Blur broadcasts — and so does a Blur parked on its LAN lobby
@@ -350,7 +350,7 @@ in the order they matter:
    "The host's own account of the session".)** What still stands is the test-plan
    consequence: the host has nothing to *answer* until a query arrives, so a
    host-only capture can prove nothing about the reply path.
-2. **The real discovery request was captured byte for byte** (`10.88.14.114:50001
+2. **The real discovery request was captured byte for byte** (`10.0.0.10:50001
    -> 255.255.255.255:50001`, 24-byte payload). It is **not** the ASCII
    `BLSIMFWD` stand-in the injector used, and the injector's help text wrongly
    claimed it was — corrected. Nothing shipped depended on the stand-in
@@ -438,10 +438,10 @@ broke a stage would be worse than the stand-in it replaced, so this must be run
 before the harness is trusted again.
 
 **The Blur guard, by contrast, is verified for real — both branches.** Blur (PID
-15832) happened to be running when the guard was added, which made it testable
+12345) happened to be running when the guard was added, which made it testable
 without elevation, and that is exactly why it was placed ahead of the elevation
 check. Unelevated and unmodified: the script printed
-`CANNOT RUN: Blur is running (PID 15832)` and exited **2**; with
+`CANNOT RUN: Blur is running (PID 12345)` and exited **2**; with
 `-AllowLiveBlur` it printed the warning and continued to the next precondition
 (`this test needs Administrator`), which proves the override overrides and that
 nothing else ran. `-AllowLiveBlur` therefore does *not* weaken the "never a false
@@ -640,14 +640,14 @@ raw bytes: `docs/packet-research.md`, "the real host ANSWER".
    The answer's source is `50001`, not an ephemeral port.
 3. Is the reply **unicast** to the player's address, or broadcast? —
    **UNICAST, confirmed.** Destination was exactly the injected source
-   `10.88.14.200:50001`. It never broadcast its answer. This also confirms the
+   `10.0.0.200:50001`. It never broadcast its answer. This also confirms the
    host *has* to be told which address to reply to, which is why it answers the
    source it saw.
 4. Is the reply's **destination port** the player's Blur source port? — **YES,
    confirmed.** `50001 -> 50001`, ports preserved as the clone assumes.
 5. Does the host's Blur **answer a forward whose source is a foreign address**
    at all? — **YES for the overlay subnet, confirmed:** it answered a query from
-   `10.88.14.200`, which is not a local address. Whether it answers a query from
+   `10.0.0.200`, which is not a local address. Whether it answers a query from
    a *different* subnet is unresolved; one later run answered nothing at all,
    including on the overlay (see the "NOT yet explained" section of the capture
    doc). Treat "it answers" as proven and "it always answers" as unproven.
@@ -840,8 +840,8 @@ two-machine proof.
 - [ ] Offset-exact payload reflection for embedded LAN IPs (never blind).
       **Decision point, not a task**, and the 2026-09-12 capture made it *less*
       urgent, not more. The reply does embed the host's addresses (confirmed),
-      but the two it lists are `192.168.1.116:3074` (the physical LAN, dead
-      across the tunnel) **and `10.88.14.114:3074` (the overlay address, which
+       but the two it lists are `192.168.0.10:3074` (the physical LAN, dead
+      across the tunnel) **and `10.0.0.10:3074` (the overlay address, which
       the friend can already reach)**. The message therefore already contains a
       usable endpoint, and rewriting may never be needed. Whether Blur *uses*
       that entry is the question the two-machine session settles; do not build a
