@@ -109,7 +109,7 @@ Blur lobby.
 
 ## Build
 
-Requirements: .NET 8 SDK, VS2022 (v143) or CMake for the helper, Windows
+Requirements: .NET 10 SDK, VS2022 (v143) or CMake for the helper, Windows
 10/11 x64, WinDivert 2.x x64 staged per `third-party/WinDivert/README.md`.
 
 ```powershell
@@ -124,8 +124,8 @@ scripts/test-e2e.ps1        # host mode + Join-mode bridge end-to-end, 42 checks
 ```
 
 Portable: `dist/BlurLink/BlurLink.exe` is the whole app in one file
-(~3.5 MB, needs the .NET 8 Desktop Runtime:
-https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe).
+(~3.5 MB, needs the .NET 10 Desktop Runtime:
+https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe).
 The helper rides inside it and is
 extracted to `%LocalAppData%\BlurLink\bin\` on first bridge start. Only
 WinDivert stays external — put `WinDivert.dll` + `WinDivert64.sys` in that
@@ -140,7 +140,7 @@ same `bin` folder (see `third-party/WinDivert/README.md`).
 
 | Flavor | Size | Needs | Cold start |
 | ------ | ---- | ----- | ---------- |
-| Slim (the deliverable) | ~3.5 MB | .NET 8 Desktop Runtime | instant |
+| Slim (the deliverable) | ~3.5 MB | .NET 10 Desktop Runtime | instant |
 | Full, legacy (`-Full`) | ~140 MB | nothing | instant |
 | SFX, legacy (`-Full -Sfx`) | ~43 MB | nothing | +~2s extract, one prompt |
 
