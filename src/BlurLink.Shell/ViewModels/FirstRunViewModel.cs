@@ -118,7 +118,8 @@ public sealed class FirstRunViewModel : ShellViewModelBase
         string? found = null;
         try
         {
-            found = _findBlur().FirstOrDefault(f => File.Exists(f)) ?? _findBlur().FirstOrDefault();
+            var cands = _findBlur();
+            found = cands.FirstOrDefault(f => File.Exists(f));
         }
         catch
         {
