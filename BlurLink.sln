@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlurLink.Desktop", "src\Blu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlurLink.Core.Tests", "tests\BlurLink.Core.Tests\BlurLink.Core.Tests.csproj", "{A1B2C3D4-4444-4000-8000-000000000004}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlurLink.Shell", "src\BlurLink.Shell\BlurLink.Shell.csproj", "{A1B2C3D4-5555-4000-8000-000000000005}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -32,6 +34,10 @@ Global
 		{A1B2C3D4-4444-4000-8000-000000000004}.Debug|x64.Build.0 = Debug|x64
 		{A1B2C3D4-4444-4000-8000-000000000004}.Release|x64.ActiveCfg = Release|x64
 		{A1B2C3D4-4444-4000-8000-000000000004}.Release|x64.Build.0 = Release|x64
+		{A1B2C3D4-5555-4000-8000-000000000005}.Debug|x64.ActiveCfg = Debug|x64
+		{A1B2C3D4-5555-4000-8000-000000000005}.Debug|x64.Build.0 = Debug|x64
+		{A1B2C3D4-5555-4000-8000-000000000005}.Release|x64.ActiveCfg = Release|x64
+		{A1B2C3D4-5555-4000-8000-000000000005}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
