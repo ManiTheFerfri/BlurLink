@@ -21,5 +21,11 @@
     <DataTemplate DataType="{x:Type vm:HostViewModel}">
       <views:HostView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+      <views:SettingsView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:DiagnosticsViewModel}">
+      <views:DiagnosticsView />
+    </DataTemplate>
   </Application.DataTemplates>
 </Application>

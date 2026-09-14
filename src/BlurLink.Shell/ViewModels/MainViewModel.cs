@@ -12,10 +12,10 @@ namespace BlurLink.Shell.ViewModels;
 public enum StatusChipKind { Idle, Running, Lost }
 
 /// <summary>
-/// Shell root: the Join and Host destinations plus status bar, notifications and the
-/// status chip. Settings/Diagnostics children arrive with Task 6;
-/// until then Join and Host are the panes. Port of the WPF MainViewModel with the
-/// brief's three structural changes (composed ctor, Notices, chip).
+/// Shell root: the Join, Host, Settings and Diagnostics destinations plus
+/// status bar, notifications and the status chip. Port of the WPF
+/// MainViewModel with the brief's three structural changes (composed ctor,
+/// Notices, chip).
 /// </summary>
 public sealed class MainViewModel : ShellViewModelBase, IDisposable
 {
@@ -30,15 +30,21 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
 
     public HostViewModel Host { get; }
 
+    public SettingsViewModel Settings { get; }
+
+    public DiagnosticsViewModel Diagnostics { get; }
+
     public NotificationCenter Notices { get; }
 
     private string _currentView = "Join";
     public string CurrentView { get => _currentView; set => Set(ref _currentView, value); }
 
-    /// <summary>The child matching <see cref="CurrentView"/> (Join or Host in this task).</summary>
+    /// <summary>The child matching <see cref="CurrentView"/> (Join, Host, Settings or Diagnostics).</summary>
     public object? CurrentPane => CurrentView switch
     {
         "Host" => Host,
+        "Settings" => Settings,
+        "Diagnostics" => Diagnostics,
         "Join" => Join,
         _ => Join,
     };
@@ -67,12 +73,20 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         StageBridgeFiles();
         Join = new JoinViewModel(Config, OnConfigChanged, _launcher, GetOrConnectIpcAsync, DropHelperConnection, UpdateStatus);
         Host = new HostViewModel(Config, OnConfigChanged, _launcher, GetOrConnectIpcAsync, DropHelperConnection, UpdateStatus);
+        Settings = new SettingsViewModel(Config, OnConfigChanged, platform: platform);
+        Diagnostics = new DiagnosticsViewModel(platform: platform);
 
         NavigateCommand = new RelayCommand(p =>
         {
             CurrentView = p?.ToString() ?? "Join";
+            Diagnostics.IsVisible = CurrentView == "Diagnostics";
             RefreshAllAdapters(); // adapter may have changed while away
             Join.Session.AttachBlur(silent: true); // game may have started while away
+            if (CurrentView == "Diagnostics")
+            {
+                Diagnostics.RefreshHelperLog(); // fresh tail when the tab opens
+            }
+
             Raise(nameof(CurrentPane));
             AppLog.Debug("Navigate: " + CurrentView);
         });
@@ -130,6 +144,7 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         {
             Join.Settings.RefreshAdaptersCommand.Execute(null);
             Host.RefreshAdaptersCommand.Execute(null);
+            Settings.RefreshAdaptersCommand.Execute(null);
             AppLog.Debug($"Adapters refreshed (join={Join.Settings.Adapters.Count}, host={Host.Adapters.Count}).");
         }
         catch (Exception ex)
@@ -143,6 +158,7 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         _store.Save(Config);
         Join.RefreshFromConfig();
         Host.RefreshFromConfig();
+        Settings.RefreshFromConfig();
     }
 
     private void UpdateStatus(string s) => StatusBar = s;
@@ -222,5 +238,6 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         _launcher.Dispose();
         Host.Dispose();
         Join.Dispose();
+        Diagnostics.Dispose();
     }
 }

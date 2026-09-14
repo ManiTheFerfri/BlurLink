@@ -23,7 +23,11 @@
           <Button Content="Join" Classes="nav active" Command="{Binding NavigateCommand}" CommandParameter="Join"
                   AutomationProperties.Name="Join tab" />
           <Button Content="Host" Classes="nav" Command="{Binding NavigateCommand}" CommandParameter="Host"
-                  AutomationProperties.Name="Host tab" />
+                   AutomationProperties.Name="Host tab" />
+          <Button Content="Settings" Classes="nav" Command="{Binding NavigateCommand}" CommandParameter="Settings"
+                   AutomationProperties.Name="Settings tab" />
+          <Button Content="Diagnostics" Classes="nav" Command="{Binding NavigateCommand}" CommandParameter="Diagnostics"
+                   AutomationProperties.Name="Diagnostics tab" />
         </StackPanel>
         <Border DockPanel.Dock="Right" CornerRadius="999" Padding="13,6" HorizontalAlignment="Right" VerticalAlignment="Center">
           <StackPanel Orientation="Horizontal">
