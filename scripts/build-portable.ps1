@@ -69,8 +69,9 @@ if (Get-Command cl.exe -ErrorAction SilentlyContinue) {
   $g = (Get-Command g++.exe).Source
   $inc = Join-Path $root 'src/BlurLink.Net/include'
   $src = Join-Path $root 'src/BlurLink.Net/src'
-  $files = @('main.cpp', 'config.cpp', 'packet.cpp', 'json_min.cpp', 'windivert_api.cpp', 'bridge.cpp', 'ipc_server.cpp') |
-    ForEach-Object { Join-Path $src $_ }
+  # All helper sources (mirrors src/BlurLink.Net/CMakeLists.txt; app.rc stays
+  # MSVC-only). Globbed so a new source cannot rot a hardcoded list again.
+  $files = Get-ChildItem -Path (Join-Path $src '*.cpp') | ForEach-Object { $_.FullName }
   $tmp = Join-Path $root 'out/helper-tmp/blurlink-net.exe'
   New-Item -ItemType Directory -Force -Path (Split-Path -Parent $tmp) | Out-Null
   # -static: zero non-system dependencies (no libgcc/libstdc++/winpthread DLLs

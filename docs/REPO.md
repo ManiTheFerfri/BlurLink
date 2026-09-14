@@ -40,6 +40,36 @@ control, and why.
 - **SDD working scratch.** `.superpowers/sdd/` is self-ignored via
   `.superpowers/sdd/.gitignore` and never enters history.
 
+## Cutting a release (Task 12)
+
+Releases are unsigned on purpose (V2 decision D6): Windows SmartScreen
+will warn on first launch — say so in the release notes rather than
+implying it does not happen.
+
+1. Bump the version in `Directory.Build.props` (`AssemblyVersion`,
+   `FileVersion`, `InformationalVersion`) so the exe `FileVersion`
+   matches the release version. The packaging script refuses to
+   continue on a mismatch.
+2. Run `pwsh -NoProfile -File scripts/package-release.ps1 -Version <semver>`
+   (e.g. `0.2.0`). It rebuilds the portable exe via
+   `scripts/build-portable.ps1`, stages `BlurLink.exe` + `LICENSE` +
+   `THIRD-PARTY-NOTICES.md` into `dist/release/staging/`, writes
+   `SHA256SUMS.txt` (one SHA256 line per file), and zips the result to
+   `dist/release/BlurLink-<version>-win-x64.zip`, printing the zip's
+   SHA256.
+3. Verify: unzip and confirm three files plus `SHA256SUMS.txt` (hashes
+   match), launch `BlurLink.exe` once and confirm it stages the helper
+   plus the WinDivert runtime to `%LocalAppData%\BlurLink\bin`.
+4. Tag `v<version>` and push the tag. `.github/workflows/release.yml`
+   (also runnable via `workflow_dispatch` with a `version` input)
+   rebuilds the package on `windows-latest`, uploads it as the
+   `BlurLink-release` artifact, and attaches `dist/release/*` to the
+   release for tags.
+
+`dist/` (including `dist/release/`) is git-ignored build output and is
+never committed; only the script, the workflow, and this section are
+versioned.
+
 ## History note (Task 1 reconcile)
 
 The V2 plan assumed a fresh repository, but the repo already existed
