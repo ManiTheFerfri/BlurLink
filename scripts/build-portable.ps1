@@ -103,7 +103,7 @@ if ($Full) {
     -o $pub --nologo
   if ($LASTEXITCODE -ne 0) { throw 'publish failed' }
   $dist = Join-Path $root 'dist/BlurLink'
-  Write-Host 'Slim exe: needs the .NET 8 Desktop Runtime (https://aka.ms/dotnet/8.0/windowsdesktop-runtime).' -ForegroundColor Yellow
+  Write-Host 'Slim exe: needs the .NET 10 Desktop Runtime (https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe).' -ForegroundColor Yellow
 }
 if (Test-Path $dist) { Remove-Item -Recurse -Force $dist }
 New-Item -ItemType Directory -Force -Path $dist | Out-Null

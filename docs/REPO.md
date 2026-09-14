@@ -1,6 +1,6 @@
 # Repository contents (REPO.md)
 
-BlurLink is a Windows-only .NET 8 + C++ WinDivert bridge for the game
+BlurLink is a Windows-only .NET 10 + C++ WinDivert bridge for the game
 Blur's LAN discovery. This file records what is and is not in version
 control, and why.
 
@@ -77,5 +77,12 @@ The V2 plan assumed a fresh repository, but the repo already existed
 history and worked on branch `v2-foundation`: the existing `.gitignore`
 was merged, never replaced (every prior line kept; only the missing
 plan-listed entries were appended), this file was added, and the commit
-records the REPO.md + ignore reconcile — the V2 spec and plan files
-were already tracked, so there was nothing new to add for them.
+ records the REPO.md + ignore reconcile — the V2 spec and plan files
+ were already tracked, so there was nothing new to add for them.
+
+ Public history will be squashed/restarted from the scrubbed commit
+ `a238ad0`: identifiers were scrubbed from the tree there but remain in
+ earlier git objects, so the squash gates the public GitHub push and is
+ executed at mirror time, verified by a clean-clone grep for the banned
+ map in `scripts/check-docs-privacy.ps1`. No history rewrite happens
+ before then.

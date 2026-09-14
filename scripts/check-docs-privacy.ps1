@@ -17,6 +17,7 @@ $ErrorActionPreference = 'Stop'
 $banned = [ordered]@{
   '10.88.14.114' = 'author overlay address'
   '10.88.14.200' = 'author overlay address'
+  '10.88.14.255' = 'author overlay broadcast'
   '192.168.1.116' = 'author physical LAN address'
   '192.168.1.200' = 'author physical LAN address'
   'PacketRaft'   = 'author overlay network name'
