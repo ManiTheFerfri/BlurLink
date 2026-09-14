@@ -16,6 +16,12 @@ Write-Host "==> dotnet test" -ForegroundColor Cyan
 & dotnet test (Join-Path $root 'BlurLink.sln') -c $Configuration --nologo
 if ($LASTEXITCODE -ne 0) { throw "dotnet test failed" }
 
+Write-Host "==> docs checks" -ForegroundColor Cyan
+& (Join-Path $root 'scripts/check-docs-privacy.ps1')
+if ($LASTEXITCODE -ne 0) { throw "privacy check failed" }
+& (Join-Path $root 'scripts/check-doc-claims.ps1')
+if ($LASTEXITCODE -ne 0) { throw "docs claim check failed" }
+
 if (Get-Command cmake -ErrorAction SilentlyContinue) {
   Write-Host "==> native tests" -ForegroundColor Cyan
   $tDir = Join-Path $root 'tests/BlurLink.Net.Tests'

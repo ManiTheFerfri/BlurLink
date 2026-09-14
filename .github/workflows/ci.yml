@@ -39,3 +39,13 @@ jobs:
         run: |
           cmake --build out/native-tests --config Release
           ctest --test-dir out/native-tests --output-on-failure
+
+  docs:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Privacy and claim checks
+        shell: pwsh
+        run: |
+          scripts/check-docs-privacy.ps1
+          scripts/check-doc-claims.ps1

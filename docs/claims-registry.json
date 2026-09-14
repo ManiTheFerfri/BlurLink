@@ -1,0 +1,37 @@
+{
+  "retractedClaims": [
+    {
+      "id": "hosting-is-silent",
+      "claim": "a hosting Blur is silent",
+      "retractedOn": "2026-09-12",
+      "reason": "A 20 s sample landed in a gap; the timestamped 45 s window caught the host's Blur querying with the host machine untouched.",
+      "allowedIn": [
+        "README.md",
+        "TODO.md",
+        "docs/packet-research.md",
+        "docs/superpowers/plans/2026-09-12-v2-foundation-and-engineering.md",
+        "docs/superpowers/specs/2026-09-12-v2-design.md"
+      ]
+    }
+  ],
+  "documentedConstants": [
+    {
+      "name": "introduction packet size",
+      "value": "20",
+      "inCode": "src/BlurLink.Net/include/blurlink/announce.h",
+      "mustAppearIn": ["docs/architecture.md"]
+    },
+    {
+      "name": "introduction port",
+      "value": "47811",
+      "inCode": "src/BlurLink.Net/include/blurlink/announce.h",
+      "mustAppearIn": ["docs/architecture.md"]
+    },
+    {
+      "name": "protocol version",
+      "value": "1",
+      "inCode": "src/BlurLink.Contracts/Constants.cs",
+      "mustAppearIn": []
+    }
+  ]
+}
