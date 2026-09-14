@@ -51,3 +51,19 @@ appsettings.local.json
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# V2 foundation reconcile (Task 1): plan-listed entries missing from the above.
+# Existing lines above are kept as-is; these broaden or add coverage.
+# Unanchored build-output dirs (existing /dist/ and /build/ only cover root).
+dist/
+build/
+
+# Native per-user project state
+*.vcxproj.user
+
+# Test and run artifacts (captures can contain real traffic excerpts)
+*.cap
+*.log
+
+# Editor noise
+.vscode/
