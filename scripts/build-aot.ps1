@@ -6,13 +6,16 @@
   the shipping flavor until the spike says otherwise (docs/aot-spike.md).
 #>
 [CmdletBinding()]
-param([string]$Configuration = 'Release')
+param(
+  [string]$Configuration = 'Release',
+  [string]$Project = 'src/BlurLink.Desktop'
+)
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $outDir = Join-Path $root 'dist/BlurLink-Aot'
 
-& dotnet publish (Join-Path $root 'src/BlurLink.Desktop') `
+& dotnet publish (Join-Path $root $Project) `
   -c $Configuration -r win-x64 -o $outDir `
   -p:PublishAot=true -p:StripSymbols=true -p:InvariantGlobalization=false
 if ($LASTEXITCODE -ne 0) { throw 'AOT publish failed' }
