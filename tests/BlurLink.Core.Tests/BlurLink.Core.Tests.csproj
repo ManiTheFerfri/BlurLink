@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>BlurLink.Core.Tests</RootNamespace>
+    <Platforms>x64</Platforms>
+    <!-- Windows-only suite (named pipes, adapters, WPF client framing). -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BlurLink.Contracts\BlurLink.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\BlurLink.Core\BlurLink.Core.csproj" />
+    <ProjectReference Include="..\..\src\BlurLink.Desktop\BlurLink.Desktop.csproj" />
+  </ItemGroup>
+
+</Project>

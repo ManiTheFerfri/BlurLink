@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <Platforms>x64</Platforms>
+    <AssemblyName>BlurLink</AssemblyName>
+    <RootNamespace>BlurLink.Desktop</RootNamespace>
+    <Version>0.1.0</Version>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <!-- English-only: drops ~12 MB of framework satellite assemblies.
+         (Trimming and invariant globalization are both WPF-incompatible.) -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <Description>BlurLink — Blur LAN discovery bridge (research/MVP). Non-elevated GUI.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BlurLink.Contracts\BlurLink.Contracts.csproj" />
+    <ProjectReference Include="..\BlurLink.Core\BlurLink.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="app.ico" />
+  </ItemGroup>
+
+  <!-- Portable single-exe: embed staged bridge files if present.
+       Staged by scripts/build-portable.ps1 into Native/ (git-ignored).
+       Dev builds without them keep working via side-by-side files. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Native\blurlink-net.exe" Condition="Exists('Native\blurlink-net.exe')" />
+    <EmbeddedResource Include="Native\WinDivert.dll" Condition="Exists('Native\WinDivert.dll')" />
+    <EmbeddedResource Include="Native\WinDivert64.sys" Condition="Exists('Native\WinDivert64.sys')" />
+  </ItemGroup>
+
+</Project>

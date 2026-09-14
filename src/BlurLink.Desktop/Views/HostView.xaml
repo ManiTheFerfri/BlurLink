@@ -1,0 +1,111 @@
+<UserControl x:Class="BlurLink.Desktop.Views.HostView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel MaxWidth="720">
+      <TextBlock Text="Host a lobby" Style="{StaticResource H1}" Margin="0,4,0,6" />
+      <TextBlock Style="{StaticResource SubtleText}" Margin="0,0,0,20" TextWrapping="Wrap"
+                 Text="Your friends' Blur sends discovery to your LAN address, which they cannot route over the overlay — so your reply never reaches them. Host mode watches for their introductions and forwards your Blur's replies to each friend's overlay address. Your own LAN keeps working exactly as it does now." />
+
+      <!-- ============ Setup card ============ -->
+      <Border Style="{StaticResource Card}">
+        <StackPanel>
+          <TextBlock Text="SETUP" Style="{StaticResource SectionLabel}" />
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="14" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="Your overlay adapter" Style="{StaticResource FieldLabel}" />
+              <ComboBox ItemsSource="{Binding Adapters}" SelectedItem="{Binding SelectedAdapter}"
+                        TextSearch.TextPath="FriendlyName">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding FriendlyName}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+              <TextBlock Text="Discovery UDP port" Style="{StaticResource FieldLabel}" />
+              <TextBox Text="{Binding DiscoveryPort, UpdateSourceTrigger=PropertyChanged}" MaxLength="5"
+                       FontFamily="{StaticResource MonoFont}" />
+            </StackPanel>
+          </Grid>
+
+          <CheckBox Content="Accept players automatically on this overlay network"
+                    IsChecked="{Binding AutoAccept}" Style="{StaticResource Switch}" Margin="0,14,0,0" />
+          <TextBlock Style="{StaticResource SubtleText}" FontSize="11.5" Margin="0,8,0,0" TextWrapping="Wrap"
+                     Text="With this on, anyone else on the same overlay network can be sent copies of your Blur's discovery replies — never your general traffic. Players are always listed below and can be revoked at any time." />
+
+          <TextBlock Text="{Binding Preflight}" Style="{StaticResource FaintText}"
+                     Margin="0,12,0,0" TextWrapping="Wrap" />
+
+          <WrapPanel Margin="0,16,0,0">
+            <Button Content="Start host mode" Command="{Binding StartHostCommand}"
+                    Style="{StaticResource PrimaryButton}" Padding="30,12" FontSize="14"
+                    Visibility="{Binding ShowStartHost, Converter={StaticResource BoolToVis}}" />
+            <Button Content="Stop host mode" Command="{Binding StopHostCommand}"
+                    Style="{StaticResource DangerButton}" Padding="30,12" FontSize="14"
+                    Visibility="{Binding HostRunning, Converter={StaticResource BoolToVis}}" />
+            <Button Content="Refresh adapters" Command="{Binding RefreshAdaptersCommand}"
+                    Style="{StaticResource QuietButton}" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- ============ Status card ============ -->
+      <Border Style="{StaticResource Card}">
+        <StackPanel>
+          <TextBlock Text="STATUS" Style="{StaticResource SectionLabel}" />
+          <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Margin="0,4,0,10" />
+          <TextBlock Text="{Binding Counters}" Style="{StaticResource Mono}" FontSize="11"
+                     Foreground="{StaticResource Faint}" />
+          <TextBlock Text="Active filter" Style="{StaticResource FieldLabel}" Margin="1,14,0,7" />
+          <TextBox Text="{Binding ActiveFilter, Mode=OneWay}" IsReadOnly="True"
+                   FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+          <TextBlock Style="{StaticResource FaintText}" FontSize="11" Margin="0,10,0,0" TextWrapping="Wrap"
+                     Text="The filter is rebuilt whenever a player joins or leaves, which leaves a very brief gap where a reply can be missed — refreshing Blur's LAN list recovers it." />
+        </StackPanel>
+      </Border>
+
+      <!-- ============ Players card ============ -->
+      <Border Style="{StaticResource Card}">
+        <StackPanel>
+          <TextBlock Text="PLAYERS" Style="{StaticResource SectionLabel}" />
+          <TextBlock Style="{StaticResource SubtleText}" FontSize="11.5" Margin="0,6,0,0" TextWrapping="Wrap"
+                     Text="No players yet. A friend appears here as soon as their bridge starts and introduces itself."
+                     Visibility="{Binding ShowNoPlayers, Converter={StaticResource BoolToVis}}" />
+          <ItemsControl ItemsSource="{Binding Players}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,8,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Summary}" FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+                    <TextBlock Style="{StaticResource FaintText}" FontSize="10.5" Margin="0,2,0,0">
+                      <Run Text="{Binding State, Mode=OneWay}" />
+                      <Run Text=" · heard " />
+                      <Run Text="{Binding ForwardsHeard, Mode=OneWay}" />
+                      <Run Text=" · forwarded " />
+                      <Run Text="{Binding RepliesForwarded, Mode=OneWay}" />
+                    </TextBlock>
+                  </StackPanel>
+                  <Button Grid.Column="1" Content="Revoke"
+                          Command="{Binding DataContext.RevokePlayerCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                          CommandParameter="{Binding}"
+                          Style="{StaticResource DangerButton}" VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,7 @@
+{
+  "profileName": "Research mode",
+  "discoveryUdpPort": null,
+  "broadcastDestination": "255.255.255.255",
+  "payloadPrefixHex": "",
+  "notes": "Fill these from an authorized local Wireshark capture. See docs/packet-research.md. Do not invent a Blur UDP port, magic bytes, or payload layout."
+}

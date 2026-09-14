@@ -1,0 +1,53 @@
+# .NET / C# artifacts
+bin/
+obj/
+out/
+publish/
+TestResults/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Native builds
+/build/
+/build-native/
+*.o
+*.obj
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.tlog
+*.lastbuildstate
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+
+# WinDivert driver binaries are NOT committed (license + arch specific).
+# Place them under third-party/WinDivert/x64/ locally; see third-party/WinDivert/README.md.
+third-party/WinDivert/x64/
+third-party/WinDivert/x86/
+third-party/WinDivert/aarch64/
+
+# Staged helper binary for portable embedding (built, never committed).
+src/BlurLink.Desktop/Native/
+
+# Packaging output
+/dist/
+*.msi
+*.msix
+*.zip
+
+# Local dev settings (per-user app config lives in %LocalAppData%, not here)
+appsettings.local.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini

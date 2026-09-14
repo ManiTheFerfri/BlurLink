@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>BlurLink.Contracts</RootNamespace>
+    <AssemblyName>BlurLink.Contracts</AssemblyName>
+    <Version>0.1.0</Version>
+    <Description>Shared IPC messages, config schema, and protocol constants for BlurLink.</Description>
+  </PropertyGroup>
+
+</Project>
