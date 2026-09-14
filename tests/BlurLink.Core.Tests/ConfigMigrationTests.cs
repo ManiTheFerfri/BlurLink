@@ -78,6 +78,9 @@ public sealed class ConfigMigrationTests
             // Host mode. hostAcceptedPlayers is a list of IPv4 addresses the
             // host accepted or revoked — metadata, never a payload or blob.
             "hostAutoAccept", "hostAcceptedPlayers",
+            // Guided first run (Task 8): verified-profile badge fields plus the
+            // profile → host-IP memory (R8: addresses only, never payloads).
+            "verifiedProfileName", "verifiedProfileDate", "firstRunDismissed", "hostIpByProfile",
         };
         foreach (var prop in doc.RootElement.EnumerateObject())
         {

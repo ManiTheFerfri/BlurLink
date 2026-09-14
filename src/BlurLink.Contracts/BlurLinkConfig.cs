@@ -58,5 +58,18 @@ public sealed class BlurLinkConfig
     [JsonPropertyName("hostAcceptedPlayers")]
     public List<string> HostAcceptedPlayers { get; set; } = new();
 
+    [JsonPropertyName("verifiedProfileName")]
+    public string VerifiedProfileName { get; set; } = string.Empty;
+
+    [JsonPropertyName("verifiedProfileDate")]
+    public string VerifiedProfileDate { get; set; } = string.Empty;
+
+    [JsonPropertyName("firstRunDismissed")]
+    public bool FirstRunDismissed { get; set; }
+
+    /// <summary>Profile name → host overlay IP remembered for it (R8: this dict only).</summary>
+    [JsonPropertyName("hostIpByProfile")]
+    public Dictionary<string, string> HostIpByProfile { get; set; } = new();
+
     public static BlurLinkConfig CreateDefault() => new();
 }

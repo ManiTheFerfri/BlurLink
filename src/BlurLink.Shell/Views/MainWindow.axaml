@@ -1,11 +1,15 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:BlurLink.Shell.ViewModels"
+        xmlns:views="using:BlurLink.Shell.Views"
         xmlns:notif="using:BlurLink.Shell.Notifications"
         x:Class="BlurLink.Shell.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="BlurLink" Width="1080" Height="720" MinWidth="880" MinHeight="600"
         WindowStartupLocation="CenterScreen" Icon="/Assets/app.ico">
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding FirstRun.SkipCommand}" />
+  </Window.KeyBindings>
   <Grid RowDefinitions="Auto,*,Auto">
     <Border Grid.Row="0" Padding="20,14" Background="{StaticResource Sidebar}">
       <DockPanel LastChildFill="True">
@@ -70,6 +74,14 @@
                   AutomationProperties.Name="Copy diagnostics" />
         </StackPanel>
       </DockPanel>
+    </Border>
+    <!-- Guided first-run overlay: covers the shell until a verified profile
+         is written or the user skips (Esc). -->
+    <Border Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding ShowFirstRun}"
+            Background="{StaticResource Sidebar}" Padding="28,22">
+      <ScrollViewer HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="700">
+        <views:FirstRunView DataContext="{Binding FirstRun}" />
+      </ScrollViewer>
     </Border>
   </Grid>
 </Window>

@@ -3,6 +3,7 @@ using System.Text.Json;
 using BlurLink.Contracts;
 using BlurLink.Core.Config;
 using BlurLink.Core.Diagnostics;
+using BlurLink.Core.FirstRun;
 using BlurLink.Core.Logging;
 using BlurLink.Platform;
 using BlurLink.Shell.Notifications;
@@ -35,6 +36,15 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
     public DiagnosticsViewModel Diagnostics { get; }
 
     public NotificationCenter Notices { get; }
+
+    /// <summary>Guided first run over live state (Task 8). Null-never after construction.</summary>
+    public FirstRunViewModel FirstRun { get; }
+
+    /// <summary>True once: no verified profile yet, still Research mode, not dismissed.</summary>
+    public bool ShowFirstRun
+        => string.IsNullOrWhiteSpace(Config.VerifiedProfileDate)
+            && Config.DiscoveryUdpPort is null
+            && !Config.FirstRunDismissed;
 
     private string _currentView = "Join";
     public string CurrentView { get => _currentView; set => Set(ref _currentView, value); }
@@ -90,6 +100,9 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
             Raise(nameof(CurrentPane));
             AppLog.Debug("Navigate: " + CurrentView);
         });
+        FirstRun = new FirstRunViewModel(
+            Config, Join.Settings, BlurFinder.Candidates,
+            view => NavigateCommand.Execute(view), OnConfigChanged);
         CopyDiagnosticsCommand = new RelayCommand(_ => CopyDiagnostics());
         Join.Session.StateChanged += _ => UpdateStatusChip();
         Join.Session.PropertyChanged += (_, e) =>
@@ -159,6 +172,8 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         Join.RefreshFromConfig();
         Host.RefreshFromConfig();
         Settings.RefreshFromConfig();
+        FirstRun.Refresh();
+        Raise(nameof(ShowFirstRun));
     }
 
     private void UpdateStatus(string s) => StatusBar = s;
