@@ -87,6 +87,14 @@ public sealed class SessionCoordinator
             return Fail(ex.Message);
         }
 
+        // Same guard StartAsync uses: an error envelope on poll becomes Failed
+        // with the helper message rather than Idle (Idle would claim no session
+        // exists while the helper is actively refusing).
+        if (IsError(raw, out var message))
+        {
+            return Fail(message);
+        }
+
         IpcStatusResponse? status;
         try
         {
@@ -128,6 +136,13 @@ public sealed class SessionCoordinator
 
         return Publish(SessionState.FromStatus(status, _phase, BlockingReasons));
     }
+
+    /// <summary>
+    /// Fold a helper error envelope into the state without a status round trip.
+    /// The Join tab's poll uses this when its own reply parse sees
+    /// {"type":"error"}; <see cref="RefreshAsync"/> runs the same guard internally.
+    /// </summary>
+    public SessionState ApplyError(string message) => Fail(message);
 
     public async Task<SessionState> StartAsync(object startRequest, SessionMode mode, CancellationToken ct)
     {

@@ -134,6 +134,13 @@
           <TextBlock Text="{Binding RepliesSummary, Mode=OneWay}" Foreground="{StaticResource Success}"
                      FontSize="12" Margin="0,2,0,0"
                      Visibility="{Binding RepliesSummary, Converter={StaticResource NonEmptyToVis}}" />
+          <TextBlock Text="{Binding Story.Headline}" FontWeight="SemiBold" Margin="0,10,0,0" />
+          <TextBlock Text="{Binding Story.Detail}" TextWrapping="Wrap" Margin="0,2,0,0" />
+          <TextBlock Text="{Binding Story.SuggestedAction}" TextWrapping="Wrap" Opacity="0.8" Margin="0,2,0,0"
+                     Visibility="{Binding Story.SuggestedAction, Converter={StaticResource NonEmptyToVis}}" />
+          <Expander Header="Counters" Margin="0,8,0,0">
+            <TextBlock Text="{Binding RawCounters}" FontFamily="Consolas" />
+          </Expander>
         </StackPanel>
       </Border>
 

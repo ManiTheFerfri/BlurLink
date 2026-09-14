@@ -5,6 +5,7 @@ using System.Text.Json;
 using BlurLink.Contracts;
 using BlurLink.Core.Logging;
 using BlurLink.Core.Net;
+using BlurLink.Core.Session;
 using BlurLink.Core.Validation;
 using BlurLink.Desktop.Services;
 
@@ -30,6 +31,8 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
     private int _pollFailures;
     private bool _helperSessionOk; // true after an authenticated status reply
     private bool _busy; // an explicit Start/Stop/Detect operation is in flight
+    private readonly SessionCoordinator _coordinator;
+    private readonly HelperIpcClient? _ownedChannelClient; // placeholder behind the coordinator's PipeHelperChannel; never touches the pipe
 
     public ObservableCollection<AdapterInfo> Adapters { get; } = new();
     public ObservableCollection<string> RecentEvents { get; } = new();
@@ -201,6 +204,14 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
     private string _counters = "captured=0 forwarded=0 reinjected=0 dropped=0 errors=0 frags=0 dedup=0";
     public string Counters { get => _counters; set => Set(ref _counters, value); }
 
+    /// <summary>User-facing session story, derived from the coordinator state. Replaces the hand-built poll sentences.</summary>
+    public SessionStory Story => SessionStoryTable.Describe(_coordinator.State);
+
+    /// <summary>Raw helper counters for the Counters disclosure. Single source: the coordinator state.</summary>
+    public string RawCounters =>
+        $"captured={_coordinator.State.Counters.Captured} forwarded={_coordinator.State.Counters.Forwarded} "
+        + $"dropped={_coordinator.State.Counters.Dropped} dedupSkipped={_coordinator.State.Counters.DedupSkipped}";
+
     private string _activeFilter = string.Empty;
     public string ActiveFilter { get => _activeFilter; set => Set(ref _activeFilter, value); }
 
@@ -320,6 +331,7 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
         Raise(nameof(PreflightChecklist));
         Raise(nameof(PreflightSummary));
         Raise(nameof(PreflightReady));
+        UpdateCoordinatorCapabilities();
     }
 
     public RelayCommand RefreshAdaptersCommand { get; }
@@ -341,7 +353,33 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
         Func<Func<bool>, CancellationToken, int, Task<HelperIpcClient>> connect,
         Action dropConnection,
         Action<string> status)
+        : this(config, onChanged, launcher, connect, dropConnection, status,
+            NewCoordinator(out HelperIpcClient owned), owned)
     {
+    }
+
+    /// <summary>Builds the production coordinator over a placeholder channel. The coordinator is used
+    /// as a state folder via ApplyStatus/ApplyError (the poll does its own IO through _connect), so the
+    /// placeholder client never touches the pipe; it only lets the ctor's initial refresh report
+    /// helper-not-running instead of a stale counter line.</summary>
+    private static SessionCoordinator NewCoordinator(out HelperIpcClient owned)
+    {
+        owned = new HelperIpcClient();
+        return new SessionCoordinator(new PipeHelperChannel(owned));
+    }
+
+    private JoinViewModel(
+        BlurLinkConfig config,
+        Action onChanged,
+        IHelperProcess launcher,
+        Func<Func<bool>, CancellationToken, int, Task<HelperIpcClient>> connect,
+        Action dropConnection,
+        Action<string> status,
+        SessionCoordinator coordinator,
+        HelperIpcClient? ownedChannelClient)
+    {
+        _coordinator = coordinator;
+        _ownedChannelClient = ownedChannelClient;
         _config = config;
         _onChanged = onChanged;
         _launcher = launcher;
@@ -394,7 +432,98 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
                 // background rescan must never throw
             }
         }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+        _coordinator.StateChanged += OnCoordinatorStateChanged;
+        UpdateCoordinatorCapabilities();
+        _ = RefreshStoryAsync(); // initial helper-not-running story; completes synchronously when disconnected
         _initialized = true;
+    }
+
+    /// <summary>Test seam: drive the tab from a fake helper instead of a real one.</summary>
+    internal static JoinViewModel ForTests(IHelperChannel channel)
+    {
+        var coordinator = new SessionCoordinator(channel);
+        var vm = new JoinViewModel(
+            BlurLinkConfig.CreateDefault(),
+            () => { },
+            new HelperLauncher(),
+            (_, _, _) => { throw new InvalidOperationException("ForTests has no pipe."); },
+            () => { },
+            _ => { },
+            coordinator,
+            ownedChannelClient: null);
+        // Set after construction: the ctor syncs capabilities from the environment.
+        coordinator.Capabilities = ReadyForTests();
+        return vm;
+    }
+
+    internal static SessionCapabilities ReadyForTests() =>
+        new(HelperPresent: true, OverlayAddressKnown: true, AdapterSelected: true, GameRunning: true);
+
+    /// <summary>One helper status through the coordinator, then rebind the view.</summary>
+    internal void ApplyStatusForTests(IpcStatusResponse status)
+    {
+        _coordinator.ApplyStatus(status);
+        Raise(nameof(Story));
+        Raise(nameof(RawCounters));
+    }
+
+    /// <summary>Keeps the coordinator's blocking reasons truthful as adapters, helper files and Blur come and go.</summary>
+    private void UpdateCoordinatorCapabilities()
+    {
+        _coordinator.Capabilities = new SessionCapabilities(
+            HelperPresent: HelperLauncher.HelperAvailable,
+            OverlayAddressKnown: SelectedAdapter is not null,
+            AdapterSelected: SelectedAdapter is not null,
+            GameRunning: _blurWatcher.Watching);
+    }
+
+    private void OnCoordinatorStateChanged(SessionState state)
+    {
+        Raise(nameof(Story));
+        Raise(nameof(RawCounters));
+    }
+
+    /// <summary>Initial story at startup (helper-not-running when disconnected). Never throws.</summary>
+    private async Task RefreshStoryAsync()
+    {
+        try
+        {
+            await _coordinator.RefreshAsync(CancellationToken.None).ConfigureAwait(true);
+        }
+        catch
+        {
+            // Initial story must never fail construction.
+        }
+
+        Raise(nameof(Story));
+        Raise(nameof(RawCounters));
+        Counters = RawCounters;
+    }
+
+    /// <summary>Error-envelope guard mirroring SessionCoordinator's (private there).</summary>
+    private static bool IsHelperError(string raw, out string message)
+    {
+        message = string.Empty;
+        try
+        {
+            using var doc = JsonDocument.Parse(raw);
+            if (doc.RootElement.TryGetProperty("type", out var type)
+                && type.GetString() == IpcMessageTypes.Error)
+            {
+                if (doc.RootElement.TryGetProperty("message", out var msg))
+                {
+                    message = msg.GetString() ?? string.Empty;
+                }
+
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
+            // Not an error envelope; treated as a status below.
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -708,6 +837,12 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
                 : "Bridge stopped — helper did not exit, force-killed. No interception remains.";
             _status("Bridge stopped.");
             AppLog.Info("Bridge stopped. Final counters: " + Counters);
+            // The poll loop exits with the bridge, so push the idle state here:
+            // otherwise the story would keep claiming the stopped session.
+            _coordinator.ApplyStatus(new IpcStatusResponse());
+            Raise(nameof(Story));
+            Raise(nameof(RawCounters));
+            Counters = RawCounters;
             _busy = false;
         }
     }
@@ -752,6 +887,11 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
         SniffCandidate = 0;
         RepliesSummary = string.Empty;
         _helperSessionOk = false;
+        // Same idle push as StopAsync: no poll will run to update the story.
+        _coordinator.ApplyStatus(new IpcStatusResponse());
+        Raise(nameof(Story));
+        Raise(nameof(RawCounters));
+        Counters = RawCounters;
         Message = "Helper force-killed. No interception remains (verify counters stay frozen).";
         _status("Helper force-killed.");
         AppLog.Warn("Helper force-killed by user.");
@@ -793,22 +933,35 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
             var response = await ipc.SendAsync(
                 new IpcSimpleCommand { Type = IpcMessageTypes.GetStatus, Token = _launcher.Token },
                 CancellationToken.None).ConfigureAwait(true);
+            // Same IsError guard StartAsync uses: an error envelope on poll becomes
+            // Failed with the helper message rather than Idle.
+            if (IsHelperError(response, out var helperError))
+            {
+                _pollFailures = 0;
+                HelperLost = false;
+                _coordinator.ApplyError(helperError);
+                Raise(nameof(Story));
+                Raise(nameof(RawCounters));
+                Counters = RawCounters;
+                return;
+            }
+
             var status = JsonSerializer.Deserialize<IpcStatusResponse>(response);
             if (status is not null && status.Type == IpcMessageTypes.Status)
             {
                 _pollFailures = 0;
                 HelperLost = false;
                 _helperSessionOk = true;
-                Counters = $"captured={status.Captured} forwarded={status.Forwarded} reinjected={status.Reinjected} dropped={status.Dropped} errors={status.InjectionErrors} frags={status.FragmentsRejected} dedup={status.DedupSkipped}" +
-                           (status.WatchdogSec > 0 ? $" wd={status.WatchdogSec}s" : string.Empty);
+                // Single source for status text: the coordinator state behind
+                // Story/RawCounters. Retired: the hand-built Counters line and the
+                // "Helper: ..." Message branch (the story carries both now).
+                _coordinator.ApplyStatus(status);
+                Raise(nameof(Story));
+                Raise(nameof(RawCounters));
+                Counters = RawCounters;
                 if (!string.IsNullOrWhiteSpace(status.Filter))
                 {
                     ActiveFilter = status.Filter;
-                }
-
-                if (!string.IsNullOrWhiteSpace(status.LastError))
-                {
-                    Message = "Helper: " + status.LastError;
                 }
 
                 RecentEvents.Clear();
@@ -831,6 +984,11 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
                 Message = "Lost connection to the helper (" + ex.Message +
                           "). It should exit by itself (watchdog); use Force Kill if its counters move.";
                 AppLog.Error("Helper connection lost: " + ex.Message);
+                // Phase truthfulness: the story must not keep claiming a live session.
+                _coordinator.ApplyError("Lost connection to the helper: " + ex.Message);
+                Raise(nameof(Story));
+                Raise(nameof(RawCounters));
+                Counters = RawCounters;
             }
         }
     }
@@ -1170,6 +1328,7 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
                 {
                     _blurWatcher.Watch(proc);
                     BlurStatus = $"Blur: running (launched, pid {proc.Id}).";
+                    UpdateCoordinatorCapabilities();
                     Message = StopWhenBlurExits
                         ? "Blur launched — bridge will stop automatically when Blur exits."
                         : "Blur launched (auto-stop disabled).";
@@ -1195,6 +1354,7 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
             : string.Empty;
         AppLog.Info($"Blur exited{exitInfo}.");
         BlurStatus = "Blur: not running.";
+        UpdateCoordinatorCapabilities();
         if (!StopWhenBlurExits || !BridgeRunning)
         {
             Message = "Blur exited" + exitInfo + ".";
@@ -1217,6 +1377,7 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
             if (_blurWatcher.Watching)
             {
                 BlurStatus = $"Blur: running (watched, pid {_blurWatcher.PrimaryPid}).";
+                UpdateCoordinatorCapabilities();
                 return;
             }
 
@@ -1235,6 +1396,8 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
         {
             AppLog.Debug("Blur attach scan failed: " + ex.Message);
         }
+
+        UpdateCoordinatorCapabilities();
     }
 
     public void Dispose()
@@ -1257,5 +1420,13 @@ public sealed class JoinViewModel : ViewModelBase, IDisposable
         _blurWatcher.Dispose();
         _pollCts?.Cancel();
         _pollCts?.Dispose();
+        try
+        {
+            _ownedChannelClient?.Dispose();
+        }
+        catch
+        {
+            // best effort
+        }
     }
 }

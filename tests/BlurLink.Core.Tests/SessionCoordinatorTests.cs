@@ -77,6 +77,30 @@ public sealed class SessionCoordinatorTests
     }
 
     [Fact]
+    public async Task AnErrorEnvelopeOnRefresh_BecomesFailedWithTheHelperMessage()
+    {
+        var channel = new ScriptedChannel();
+        channel.Enqueue("""{"type":"error","message":"bridge busy"}""");
+        var sut = new SessionCoordinator(channel) { Capabilities = Ready };
+
+        var state = await sut.RefreshAsync(CancellationToken.None);
+
+        Assert.Equal(SessionPhase.Failed, state.Phase);
+        Assert.Contains("bridge busy", state.LastError);
+    }
+
+    [Fact]
+    public void ApplyError_EntersFailedWithTheMessage()
+    {
+        var sut = new SessionCoordinator(new ScriptedChannel()) { Capabilities = Ready };
+
+        var state = sut.ApplyError("helper refused the poll");
+
+        Assert.Equal(SessionPhase.Failed, state.Phase);
+        Assert.Contains("refused", state.LastError);
+    }
+
+    [Fact]
     public async Task WithoutAConnection_TheStateCarriesTheBlockingReason()
     {
         var channel = new ScriptedChannel { IsConnected = false };
