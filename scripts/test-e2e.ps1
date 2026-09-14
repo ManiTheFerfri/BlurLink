@@ -130,7 +130,10 @@ param(
   # filter that stages count on. So it is refused by default rather than noted in
   # a comment. This switch is the explicit "I understand -- run anyway": it
   # warns loudly and continues.
-  [switch]$AllowLiveBlur
+  [switch]$AllowLiveBlur,
+  # Report the environment preconditions and exit without opening a handle or
+  # injecting anything. Exit 0 = the environment is ready, 2 = it is not.
+  [switch]$PreflightOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -151,6 +154,17 @@ function New-PipeName {
 
 # --- preconditions: fail loudly rather than reporting a false pass ---
 
+$preflightFailures = @()
+function Test-Precondition {
+  param([string]$Name, [bool]$Ok, [string]$Reason = '')
+  if ($Ok) { Write-Host "PASS $Name" -ForegroundColor Green }
+  else {
+    Write-Host "FAIL $Name`: $Reason" -ForegroundColor Yellow
+    $script:preflightFailures += $Name
+  }
+  return $Ok
+}
+
 # The Blur guard runs FIRST, ahead of the elevation check, for two reasons. It is
 # the safety precondition -- this harness injects the REAL 24-byte discovery
 # query now, so a hosting Blur can treat one as a genuine query and answer it,
@@ -159,9 +173,11 @@ function New-PipeName {
 # answerable WITHOUT an elevated shell, so someone with the game open hears the
 # real reason on the first try instead of after an elevation round trip.
 $liveBlur = @(Get-Process -Name 'Blur' -ErrorAction SilentlyContinue)
-if ($liveBlur.Count -gt 0) {
-  $blurPids = ($liveBlur | Sort-Object Id | ForEach-Object { $_.Id }) -join ', '
-  if (-not $AllowLiveBlur) {
+$blurPids = ($liveBlur | Sort-Object Id | ForEach-Object { $_.Id }) -join ', '
+$blurOk = ($liveBlur.Count -eq 0) -or $AllowLiveBlur
+$blurReason = "Blur is running (PID $blurPids) -- close Blur and re-run, or pass -AllowLiveBlur to run anyway"
+if (-not (Test-Precondition 'blur-not-running' $blurOk $blurReason)) {
+  if ($PreflightOnly) { } else {
     Write-Host "CANNOT RUN: Blur is running (PID $blurPids)." -ForegroundColor Yellow
     Write-Host 'This harness injects the REAL 24-byte discovery query, byte for byte.' -ForegroundColor Yellow
     Write-Host 'A hosting Blur can treat an injected broadcast as a genuine query and answer it,' -ForegroundColor Yellow
@@ -170,6 +186,8 @@ if ($liveBlur.Count -gt 0) {
     Write-Host 'Close Blur and re-run, or pass -AllowLiveBlur to run anyway.' -ForegroundColor Yellow
     exit 2
   }
+}
+if ($liveBlur.Count -gt 0 -and $AllowLiveBlur) {
   Write-Host "WARNING: Blur is running (PID $blurPids) and -AllowLiveBlur was passed -- continuing." -ForegroundColor Yellow
   Write-Host 'Expect real game traffic in the captures: a stage that counts broadcasts, or asserts a' -ForegroundColor Yellow
   Write-Host 'specific packet count, can flip. A failure here may be the game rather than the code --' -ForegroundColor Yellow
@@ -178,10 +196,12 @@ if ($liveBlur.Count -gt 0) {
 
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()
   ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if (-not $isAdmin) {
-  Write-Host 'CANNOT RUN: this test needs Administrator (WinDivertOpen requires it).' -ForegroundColor Yellow
-  Write-Host 'Start an elevated PowerShell and run this script again.' -ForegroundColor Yellow
-  exit 2
+if (-not (Test-Precondition 'elevated' $isAdmin 'WinDivertOpen needs Administrator - start an elevated PowerShell')) {
+  if ($PreflightOnly) { } else {
+    Write-Host 'CANNOT RUN: this test needs Administrator (WinDivertOpen requires it).' -ForegroundColor Yellow
+    Write-Host 'Start an elevated PowerShell and run this script again.' -ForegroundColor Yellow
+    exit 2
+  }
 }
 
 if ([string]::IsNullOrWhiteSpace($HelperExe)) { $HelperExe = Join-Path $root 'out/interop/blurlink-net.exe' }
@@ -190,7 +210,7 @@ if ([string]::IsNullOrWhiteSpace($HelperLog)) {
   $HelperLog = Join-Path ([System.IO.Path]::GetTempPath()) 'blurlink-e2e.log'
 }
 
-if (-not (Test-Path $SimExe)) {
+if ((-not $PreflightOnly) -and (-not (Test-Path $SimExe))) {
   Write-Host '==> building hostsim with MinGW g++' -ForegroundColor Cyan
   $g = (Get-Command g++.exe -ErrorAction Stop).Source
   $inc = Join-Path $root 'src/BlurLink.Net/include'
@@ -207,10 +227,21 @@ if (-not (Test-Path $SimExe)) {
   if ($LASTEXITCODE -ne 0) { throw 'hostsim link failed' }
 }
 
-if (-not (Test-Path $HelperExe)) {
-  Write-Host "CANNOT RUN: helper not found at $HelperExe" -ForegroundColor Yellow
-  Write-Host 'Run scripts/test-interop.ps1 first (it builds the helper), or pass -HelperExe.' -ForegroundColor Yellow
-  exit 2
+$helperOk = Test-Path $HelperExe
+if (-not (Test-Precondition 'helper-present' $helperOk "helper not found at $HelperExe - run scripts/test-interop.ps1 first (it builds the helper), or pass -HelperExe")) {
+  if ($PreflightOnly) { } else {
+    Write-Host "CANNOT RUN: helper not found at $HelperExe" -ForegroundColor Yellow
+    Write-Host 'Run scripts/test-interop.ps1 first (it builds the helper), or pass -HelperExe.' -ForegroundColor Yellow
+    exit 2
+  }
+}
+$simOk = Test-Path $SimExe
+if (-not (Test-Precondition 'injector-present' $simOk "injector not found at $SimExe - run scripts/test-interop.ps1 first (it builds the injector), or pass -SimExe")) {
+  if ($PreflightOnly) { } else {
+    Write-Host "CANNOT RUN: injector not found at $SimExe" -ForegroundColor Yellow
+    Write-Host 'Run scripts/test-interop.ps1 first (it builds the injector), or pass -SimExe.' -ForegroundColor Yellow
+    exit 2
+  }
 }
 
 # WinDivert needs the DLL *and* the driver .sys together: WinDivertOpen()
@@ -218,13 +249,25 @@ if (-not (Test-Path $HelperExe)) {
 # fails with "driver not found" (code 2) on a machine that has never run it.
 # Both are staged beside BOTH processes.
 $vendored = Join-Path $root 'third-party/WinDivert/x64'
-foreach ($needed in @('WinDivert.dll', 'WinDivert64.sys')) {
-  if (-not (Test-Path (Join-Path $vendored $needed))) {
-    Write-Host "CANNOT RUN: missing third-party/WinDivert/x64/$needed" -ForegroundColor Yellow
+$dllOk = Test-Path (Join-Path $vendored 'WinDivert.dll')
+if (-not (Test-Precondition 'windivert-dll' $dllOk 'missing third-party/WinDivert/x64/WinDivert.dll - see third-party/WinDivert/README.md (WinDivert 2.2.2 x64)')) {
+  if ($PreflightOnly) { } else {
+    Write-Host "CANNOT RUN: missing third-party/WinDivert/x64/WinDivert.dll" -ForegroundColor Yellow
     Write-Host 'See third-party/WinDivert/README.md (WinDivert 2.2.2 x64).' -ForegroundColor Yellow
     exit 2
   }
 }
+$sysOk = Test-Path (Join-Path $vendored 'WinDivert64.sys')
+if (-not (Test-Precondition 'windivert-driver' $sysOk 'missing third-party/WinDivert/x64/WinDivert64.sys - see third-party/WinDivert/README.md (WinDivert 2.2.2 x64)')) {
+  if ($PreflightOnly) { } else {
+    Write-Host "CANNOT RUN: missing third-party/WinDivert/x64/WinDivert64.sys" -ForegroundColor Yellow
+    Write-Host 'See third-party/WinDivert/README.md (WinDivert 2.2.2 x64).' -ForegroundColor Yellow
+    exit 2
+  }
+}
+# Staging copies the driver beside both processes; preflight only reports, so
+# it never copies -- the exit block below returns before any side effect.
+if (-not $PreflightOnly) {
 foreach ($dir in @((Split-Path -Parent $HelperExe), (Split-Path -Parent $SimExe))) {
   foreach ($needed in @('WinDivert.dll', 'WinDivert64.sys')) {
     $src = Join-Path $vendored $needed
@@ -244,6 +287,7 @@ foreach ($dir in @((Split-Path -Parent $HelperExe), (Split-Path -Parent $SimExe)
     }
   }
 }
+}
 
 # The host's own address is the destination of the packets we inject as inbound
 # and the source of those we inject as outbound. It is cosmetic to host mode's
@@ -256,9 +300,29 @@ if ([string]::IsNullOrWhiteSpace($HostIp)) {
     Where-Object { $_ -notlike '127.*' } |
     Select-Object -First 1
 }
-if ([string]::IsNullOrWhiteSpace($HostIp)) {
-  Write-Host 'CANNOT RUN: could not determine this machine''s IPv4 address; pass -HostIp.' -ForegroundColor Yellow
-  exit 2
+$hostIpOk = -not [string]::IsNullOrWhiteSpace($HostIp)
+if (-not (Test-Precondition 'host-ip' $hostIpOk "could not determine this machine's IPv4 address; pass -HostIp")) {
+  if ($PreflightOnly) { } else {
+    Write-Host 'CANNOT RUN: could not determine this machine''s IPv4 address; pass -HostIp.' -ForegroundColor Yellow
+    exit 2
+  }
+}
+
+$portOk = ($DiscoveryPort -ge 1) -and ($DiscoveryPort -le 65535)
+if (-not (Test-Precondition 'discovery-port' $portOk "discovery port $DiscoveryPort out of range (1-65535); pass -DiscoveryPort 1..65535")) {
+  if ($PreflightOnly) { } else {
+    Write-Host "CANNOT RUN: discovery port $DiscoveryPort out of range (1-65535)." -ForegroundColor Yellow
+    exit 2
+  }
+}
+
+if ($PreflightOnly) {
+  if ($preflightFailures.Count -gt 0) {
+    Write-Host "PREFLIGHT FAILED ($($preflightFailures.Count) precondition(s) unmet)" -ForegroundColor Yellow
+    exit 2
+  }
+  Write-Host 'PREFLIGHT OK — environment ready for the elevated run' -ForegroundColor Green
+  exit 0
 }
 
 # Host mode validates adapterIfIndex but does not put it in the filter, so this
