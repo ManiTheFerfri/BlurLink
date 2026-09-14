@@ -12,9 +12,9 @@ namespace BlurLink.Shell.ViewModels;
 public enum StatusChipKind { Idle, Running, Lost }
 
 /// <summary>
-/// Shell root: the Join destination plus status bar, notifications and the
-/// status chip. Host/Settings/Diagnostics children arrive with Tasks 5–6;
-/// until then Join is the only pane. Port of the WPF MainViewModel with the
+/// Shell root: the Join and Host destinations plus status bar, notifications and the
+/// status chip. Settings/Diagnostics children arrive with Task 6;
+/// until then Join and Host are the panes. Port of the WPF MainViewModel with the
 /// brief's three structural changes (composed ctor, Notices, chip).
 /// </summary>
 public sealed class MainViewModel : ShellViewModelBase, IDisposable
@@ -28,14 +28,17 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
 
     public JoinViewModel Join { get; }
 
+    public HostViewModel Host { get; }
+
     public NotificationCenter Notices { get; }
 
     private string _currentView = "Join";
     public string CurrentView { get => _currentView; set => Set(ref _currentView, value); }
 
-    /// <summary>The child matching <see cref="CurrentView"/> (Join in this task).</summary>
+    /// <summary>The child matching <see cref="CurrentView"/> (Join or Host in this task).</summary>
     public object? CurrentPane => CurrentView switch
     {
+        "Host" => Host,
         "Join" => Join,
         _ => Join,
     };
@@ -63,6 +66,7 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         AppLog.Info("BlurLink started. Research mode (port unknown until verified).");
         StageBridgeFiles();
         Join = new JoinViewModel(Config, OnConfigChanged, _launcher, GetOrConnectIpcAsync, DropHelperConnection, UpdateStatus);
+        Host = new HostViewModel(Config, OnConfigChanged, _launcher, GetOrConnectIpcAsync, DropHelperConnection, UpdateStatus);
 
         NavigateCommand = new RelayCommand(p =>
         {
@@ -125,7 +129,8 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         try
         {
             Join.Settings.RefreshAdaptersCommand.Execute(null);
-            AppLog.Debug($"Adapters refreshed (join={Join.Settings.Adapters.Count}).");
+            Host.RefreshAdaptersCommand.Execute(null);
+            AppLog.Debug($"Adapters refreshed (join={Join.Settings.Adapters.Count}, host={Host.Adapters.Count}).");
         }
         catch (Exception ex)
         {
@@ -137,6 +142,7 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
     {
         _store.Save(Config);
         Join.RefreshFromConfig();
+        Host.RefreshFromConfig();
     }
 
     private void UpdateStatus(string s) => StatusBar = s;
@@ -186,6 +192,10 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
                     $"  running={Join.Session.BridgeRunning} helperLost={Join.Session.HelperLost}" + Environment.NewLine +
                     $"  filter={Join.Session.ActiveFilter}" + Environment.NewLine +
                     $"  {Join.Session.Counters}" + Environment.NewLine;
+            text += Environment.NewLine + "[Host mode]" + Environment.NewLine +
+                    $"  running={Host.HostRunning} players={Host.Players.Count}" + Environment.NewLine +
+                    $"  {Host.Counters}" + Environment.NewLine +
+                    $"  {Host.StatusText}" + Environment.NewLine;
             text += Environment.NewLine + "[Shell]" + Environment.NewLine +
                     $"  shell=Avalonia (BlurLink.Shell)" + Environment.NewLine;
             _platform.CopyToClipboard(text);
@@ -210,6 +220,7 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         _watcher.Dispose();
         _ipc?.Dispose();
         _launcher.Dispose();
+        Host.Dispose();
         Join.Dispose();
     }
 }
