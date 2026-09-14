@@ -2,7 +2,7 @@ using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
 using BlurLink.Contracts;
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 using Xunit;
 
 namespace BlurLink.Core.Tests;

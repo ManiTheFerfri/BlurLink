@@ -2,7 +2,7 @@ using System.IO;
 using System.Threading;
 using BlurLink.Core.Logging;
 
-namespace BlurLink.Desktop.Services;
+namespace BlurLink.Platform;
 
 /// <summary>
 /// Process-level single-instance guard for the GUI. Two BlurLink windows must

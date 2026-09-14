@@ -1,5 +1,5 @@
 using System.Windows;
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 
 namespace BlurLink.Desktop;
 

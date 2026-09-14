@@ -1,7 +1,7 @@
 using System.Net.NetworkInformation;
 using BlurLink.Contracts;
 using BlurLink.Core.Net;
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 using BlurLink.Desktop.ViewModels;
 using Xunit;
 

@@ -4,7 +4,7 @@ using BlurLink.Contracts;
 using BlurLink.Core.Logging;
 using BlurLink.Core.Net;
 using BlurLink.Core.Validation;
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 
 namespace BlurLink.Desktop.ViewModels;
 

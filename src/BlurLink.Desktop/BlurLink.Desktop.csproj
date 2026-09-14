@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\BlurLink.Contracts\BlurLink.Contracts.csproj" />
     <ProjectReference Include="..\BlurLink.Core\BlurLink.Core.csproj" />
+    <ProjectReference Include="..\BlurLink.Platform\BlurLink.Platform.csproj" />
   </ItemGroup>
 
   <ItemGroup>

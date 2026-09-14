@@ -1,6 +1,6 @@
 using BlurLink.Core.Session;
 
-namespace BlurLink.Desktop.Services;
+namespace BlurLink.Platform;
 
 /// <summary>Adapts the named-pipe client to the coordinator's seam.</summary>
 public sealed class PipeHelperChannel : IHelperChannel

@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json;
 using BlurLink.Contracts;
 
-namespace BlurLink.Desktop.Services;
+namespace BlurLink.Platform;
 
 /// <summary>
 /// The subset of the elevated helper's lifecycle the GUI needs. Extracted so

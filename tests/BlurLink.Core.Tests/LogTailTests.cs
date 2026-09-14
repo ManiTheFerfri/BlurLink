@@ -1,4 +1,4 @@
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 using BlurLink.Desktop.ViewModels;
 using BlurLink.Core.Logging;
 using Xunit;

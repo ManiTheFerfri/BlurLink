@@ -1,6 +1,6 @@
 using System.IO.Pipes;
 using System.Text;
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 
 namespace BlurLink.Core.Tests;
 

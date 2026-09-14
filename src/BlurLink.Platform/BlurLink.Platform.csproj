@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>x64</Platforms>
+    <RootNamespace>BlurLink.Platform</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BlurLink.Contracts\BlurLink.Contracts.csproj" />
+    <ProjectReference Include="..\BlurLink.Core\BlurLink.Core.csproj" />
+  </ItemGroup>
+
+</Project>

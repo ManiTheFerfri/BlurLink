@@ -1,6 +1,6 @@
 using System.Net.NetworkInformation;
 
-namespace BlurLink.Desktop.Services;
+namespace BlurLink.Platform;
 
 /// <summary>
 /// Raises <see cref="Changed"/> on the UI thread whenever Windows reports a

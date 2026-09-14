@@ -1,6 +1,6 @@
 using BlurLink.Contracts;
 using BlurLink.Core.Session;
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 using BlurLink.Desktop.ViewModels;
 using Xunit;
 

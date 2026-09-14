@@ -1,4 +1,4 @@
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 using Xunit;
 
 namespace BlurLink.Core.Tests;

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace BlurLink.Desktop.Services;
+namespace BlurLink.Platform;
 
 /// <summary>
 /// Tracks running game instances for status + auto-stop. Robustness rules:

@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\src\BlurLink.Contracts\BlurLink.Contracts.csproj" />
     <ProjectReference Include="..\..\src\BlurLink.Core\BlurLink.Core.csproj" />
     <ProjectReference Include="..\..\src\BlurLink.Desktop\BlurLink.Desktop.csproj" />
+    <ProjectReference Include="..\..\src\BlurLink.Platform\BlurLink.Platform.csproj" />
   </ItemGroup>
 
 </Project>

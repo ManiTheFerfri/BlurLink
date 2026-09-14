@@ -1,4 +1,4 @@
-using BlurLink.Desktop.Services;
+using BlurLink.Platform;
 using BlurLink.Desktop.ViewModels;
 using Xunit;
 
@@ -59,7 +59,7 @@ public sealed class MainViewModelConstructionTests
     [Fact]
     public void AttachToMissingGame_ReturnsFalse()
     {
-        using var watcher = new Desktop.Services.BlurProcessWatcher();
+        using var watcher = new Platform.BlurProcessWatcher();
         Assert.False(watcher.AttachToRunning("DefinitelyNotARealProcessName12345"));
         Assert.False(watcher.Watching);
     }
@@ -67,7 +67,7 @@ public sealed class MainViewModelConstructionTests
     [Fact]
     public void AttachToOwnTestHost_WatchesAndReleases()
     {
-        using var watcher = new Desktop.Services.BlurProcessWatcher();
+        using var watcher = new Platform.BlurProcessWatcher();
         var self = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
         Assert.True(watcher.AttachToRunning(self));
         Assert.True(watcher.Watching);
@@ -81,7 +81,7 @@ public sealed class MainViewModelConstructionTests
     [Fact]
     public void AttachPrefersNothing_WithoutPathStillFindsByName()
     {
-        using var watcher = new Desktop.Services.BlurProcessWatcher();
+        using var watcher = new Platform.BlurProcessWatcher();
         var self = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
         Assert.True(watcher.AttachToRunning(self, expectedPath: "C:\\no\\such\\game.exe"));
     }
