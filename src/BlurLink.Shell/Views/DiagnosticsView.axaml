@@ -15,9 +15,11 @@
         <TextBlock Text="HELPER LOG" Classes="label" />
         <DockPanel LastChildFill="True" Margin="0,0,0,10">
           <CheckBox DockPanel.Dock="Right" Content="Auto-refresh" IsChecked="{Binding AutoRefreshHelperLog}"
+                    AutomationProperties.Name="Auto-refresh helper log"
                     VerticalAlignment="Center" />
           <WrapPanel>
-            <Button Content="Refresh now" Command="{Binding RefreshHelperLogCommand}" />
+            <Button Content="Refresh now" Command="{Binding RefreshHelperLogCommand}"
+                    AutomationProperties.Name="Refresh helper log now" />
             <Button x:Name="CopyLogButton" Content="Copy log" Command="{Binding CopyHelperLogCommand}"
                     AutomationProperties.Name="Copy helper log" />
           </WrapPanel>
@@ -71,7 +73,8 @@
         <TextBox Text="{Binding Verify.Sample3}" PlaceholderText="Paste first 16+ payload bytes from Wireshark"
                  FontFamily="{StaticResource MonoFont}" />
         <TextBlock Text="Profile name" Classes="label" />
-        <TextBox Text="{Binding Verify.ProfileName}" MaxLength="80" />
+        <TextBox Text="{Binding Verify.ProfileName}" MaxLength="80"
+                 AutomationProperties.Name="Profile name" />
         <WrapPanel Margin="0,12,0,0">
           <Button Content="Check prefix stability" Command="{Binding Verify.CheckCommand}"
                   AutomationProperties.Name="Check prefix stability" />

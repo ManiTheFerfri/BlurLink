@@ -49,3 +49,13 @@ jobs:
         run: |
           scripts/check-docs-privacy.ps1
           scripts/check-doc-claims.ps1
+
+  ui:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Headless UI tests
+        run: dotnet test tests/BlurLink.Shell.Tests -c Release --nologo --filter "FullyQualifiedName~HeadlessTests|FullyQualifiedName~Headless"

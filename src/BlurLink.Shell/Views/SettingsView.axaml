@@ -13,21 +13,26 @@
         <TextBlock Text="GAME" Classes="label" />
         <TextBlock Text="Blur.exe path" Classes="label" />
         <DockPanel LastChildFill="True">
-          <Button DockPanel.Dock="Right" Content="Browse" Command="{Binding BrowseCommand}" Margin="10,0,0,4" />
-          <TextBox Text="{Binding BlurPath}" VerticalContentAlignment="Center" />
+          <Button DockPanel.Dock="Right" Content="Browse" Command="{Binding BrowseCommand}" Margin="10,0,0,4"
+                  AutomationProperties.Name="Browse for Blur.exe" />
+          <TextBox Text="{Binding BlurPath}" VerticalContentAlignment="Center"
+                   AutomationProperties.Name="Blur.exe path" />
         </DockPanel>
         <TextBlock Text="Extra command-line arguments (optional)" Classes="label" />
         <TextBox Text="{Binding BlurArgs}"
+                 AutomationProperties.Name="Extra command-line arguments"
                  FontFamily="{StaticResource MonoFont}" />
         <Grid ColumnDefinitions="Auto,24,*">
           <StackPanel Grid.Column="0">
             <TextBlock Text="Rate limit (packets/sec)" Classes="label" />
             <TextBox Text="{Binding RateLimit}" MaxLength="3"
+                     AutomationProperties.Name="Rate limit"
                      FontFamily="{StaticResource MonoFont}" Width="130" HorizontalAlignment="Left" />
           </StackPanel>
           <StackPanel Grid.Column="2">
             <TextBlock Text="Logging (metadata only — never payloads)" Classes="label" />
             <ComboBox ItemsSource="{Binding LogLevels}" SelectedItem="{Binding LogLevel}"
+                      AutomationProperties.Name="Logging level"
                       Width="220" HorizontalAlignment="Left" />
           </StackPanel>
         </Grid>
@@ -35,8 +40,10 @@
           <Button x:Name="SaveButton" Content="Save" Command="{Binding SaveCommand}"
                   Classes="primary" Padding="24,10"
                   AutomationProperties.Name="Save settings" />
-          <Button Content="Reset" Command="{Binding ResetCommand}" />
-          <Button Content="Open log folder" Command="{Binding OpenLogFolderCommand}" />
+          <Button Content="Reset" Command="{Binding ResetCommand}"
+                  AutomationProperties.Name="Reset settings" />
+          <Button Content="Open log folder" Command="{Binding OpenLogFolderCommand}"
+                  AutomationProperties.Name="Open log folder" />
         </WrapPanel>
         <TextBlock Text="{Binding Message}" Foreground="{StaticResource Accent}" Margin="0,10,0,0"
                    IsVisible="{Binding Message, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
@@ -50,9 +57,12 @@
         <TextBlock Classes="faint" Margin="0,0,0,12"
                    Text="Check that Windows sends overlay traffic the right way." />
         <WrapPanel>
-          <Button Content="Run route test" Command="{Binding RouteTestCommand}" />
-          <Button Content="Ping host" Command="{Binding PingCommand}" />
-          <Button Content="Refresh adapters" Command="{Binding RefreshAdaptersCommand}" />
+          <Button Content="Run route test" Command="{Binding RouteTestCommand}"
+                  AutomationProperties.Name="Run route test" />
+          <Button Content="Ping host" Command="{Binding PingCommand}"
+                  AutomationProperties.Name="Ping host" />
+          <Button Content="Refresh adapters" Command="{Binding RefreshAdaptersCommand}"
+                  AutomationProperties.Name="Refresh adapters" />
         </WrapPanel>
         <TextBlock Text="{Binding RouteResult}" Classes="mono" Margin="0,12,0,0" />
         <TextBlock Text="{Binding PingResult}" Classes="mono" />
@@ -66,10 +76,13 @@
       <StackPanel>
         <TextBlock Text="BACKUP &amp; RESEARCH NOTES" Classes="label" />
         <WrapPanel>
-          <Button Content="Export settings" Command="{Binding ExportCommand}" />
-          <Button Content="Import settings" Command="{Binding ImportCommand}" />
+          <Button Content="Export settings" Command="{Binding ExportCommand}"
+                  AutomationProperties.Name="Export settings" />
+          <Button Content="Import settings" Command="{Binding ImportCommand}"
+                  AutomationProperties.Name="Import settings" />
         </WrapPanel>
         <TextBox Text="{Binding ExportText}" Height="100"
+                 AutomationProperties.Name="Exported settings"
                  FontFamily="{StaticResource MonoFont}" FontSize="11.5" AcceptsReturn="True"
                  Margin="0,12,0,12" />
         <TextBlock Text="{Binding ResearchSteps, Mode=OneWay}" FontSize="12"

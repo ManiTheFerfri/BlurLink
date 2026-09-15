@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using BlurLink.Shell.ViewModels;
 
 namespace BlurLink.Shell.Views;
@@ -61,6 +62,26 @@ public sealed partial class MainWindow : Window
             vm.Join.Dispose();
             vm.Dispose();
         };
+    }
+
+    /// <summary>
+    /// Task 13: navigation seam for the headless tests (and keyboard users).
+    /// Delegates to the VM, then lands keyboard focus on the first focusable
+    /// control inside the new pane — best effort, a no-op when the pane has
+    /// not materialized yet or nothing in it can take focus.
+    /// </summary>
+    public void Navigate(string view)
+    {
+        if (DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        vm.NavigateCommand.Execute(view);
+        var pane = this.GetVisualDescendants().OfType<ContentControl>().FirstOrDefault();
+        var target = pane?.GetVisualDescendants().OfType<Control>()
+            .FirstOrDefault(c => c is Button or TextBox or ComboBox && c.Focusable && c.IsEffectivelyVisible);
+        target?.Focus();
     }
 
     private void OnVmChanged(object? sender, PropertyChangedEventArgs e)
