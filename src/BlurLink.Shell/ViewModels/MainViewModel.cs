@@ -84,7 +84,12 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         Join = new JoinViewModel(Config, OnConfigChanged, _launcher, GetOrConnectIpcAsync, DropHelperConnection, UpdateStatus);
         Host = new HostViewModel(Config, OnConfigChanged, _launcher, GetOrConnectIpcAsync, DropHelperConnection, UpdateStatus);
         Settings = new SettingsViewModel(Config, OnConfigChanged, platform: platform);
-        Diagnostics = new DiagnosticsViewModel(platform: platform);
+        Diagnostics = new DiagnosticsViewModel(platform: platform, verify: new VerifyProfileViewModel(
+            Config,
+            s => Join.Settings.DiscoveryPort = s,
+            s => Join.Settings.BroadcastDestination = s,
+            s => Join.Settings.PayloadHex = s,
+            OnConfigChanged));
 
         NavigateCommand = new RelayCommand(p =>
         {

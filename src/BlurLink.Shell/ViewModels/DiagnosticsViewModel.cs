@@ -40,16 +40,26 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
     public RelayCommand RefreshHelperLogCommand { get; }
     public RelayCommand CopyHelperLogCommand { get; }
 
+    /// <summary>The Verify section child (Task 9). Null in older constructions
+    /// and tests that pass nothing — the view hides the section then.</summary>
+    public VerifyProfileViewModel? Verify { get; }
+
+    /// <summary>Whether the Verify section is present (bound by the view).</summary>
+    public bool HasVerify => Verify is not null;
+
     /// <summary>
     /// <paramref name="logDirectory"/> null means the real logs dir;
     /// tests pass a temp dir. <paramref name="platform"/> null gets a
     /// throwaway that throws <see cref="InvalidOperationException"/> on use
     /// (production always passes both explicitly).
+    /// <paramref name="verify"/> null hides the Verify section (older
+    /// constructions, including the Task 6 tests, pass nothing).
     /// </summary>
-    public DiagnosticsViewModel(string? logDirectory = null, IPlatformServices? platform = null)
+    public DiagnosticsViewModel(string? logDirectory = null, IPlatformServices? platform = null, VerifyProfileViewModel? verify = null)
     {
         _logDirectory = logDirectory;
         _platform = platform ?? new ThrowingPlatformServices();
+        Verify = verify;
         _ui = SynchronizationContext.Current;
         RefreshHelperLogCommand = new RelayCommand(_ => RefreshHelperLog());
         CopyHelperLogCommand = new RelayCommand(_ => CopyHelperLog());
