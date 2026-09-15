@@ -470,6 +470,7 @@ public sealed class JoinSessionViewModel : ShellViewModelBase, IDisposable
             _helperSessionOk = true; // the start reply proves an authenticated session
             _sniff.SniffRunning = false;
             BridgeRunning = true;
+            MainViewModel.RememberHost(_config); // Task 11: per-profile host memory at start time
             Message = "Bridge running. Open Blur and search its LAN games list.";
             _status($"Bridge active — {_settings.HostIp.Trim()}:{port} via filter: {filter}");
             AppLog.Info("Bridge running.");
@@ -698,14 +699,8 @@ public sealed class JoinSessionViewModel : ShellViewModelBase, IDisposable
         AttachBlur(silent: true);
         try
         {
-            var gameDir = Path.GetDirectoryName(_config.BlurExePath) ?? string.Empty;
-            var psi = new ProcessStartInfo(_config.BlurExePath)
-            {
-                UseShellExecute = true,
-                WorkingDirectory = gameDir, // game folder, not ours — else instant crash
-                Arguments = _config.BlurArgs,
-            };
-            AppLog.Info($"Launching Blur: exe='{_config.BlurExePath}' workdir='{gameDir}' args='{_config.BlurArgs}'.");
+            var psi = BuildBlurStartInfo(_config);
+            AppLog.Info($"Launching Blur: exe='{_config.BlurExePath}' workdir='{psi.WorkingDirectory}' args='{_config.BlurArgs}'.");
             var proc = Process.Start(psi);
             if (proc is not null)
             {
@@ -732,6 +727,24 @@ public sealed class JoinSessionViewModel : ShellViewModelBase, IDisposable
             AppLog.Error($"Blur launch failed: {ex.GetType().Name}: {ex.Message} (exe='{_config.BlurExePath}').");
         }
     }
+
+    /// <summary>Task 11 parity seam: the exact launch recipe (game folder as
+    /// workdir, configured Blur args) as a pure value for the parity test.
+    /// WPF parity: same two lines as <c>BlurLink.Desktop</c>'s launcher.</summary>
+    internal static ProcessStartInfo BuildBlurStartInfo(BlurLinkConfig config)
+    {
+        var gameDir = Path.GetDirectoryName(config.BlurExePath) ?? string.Empty;
+        return new ProcessStartInfo(config.BlurExePath)
+        {
+            UseShellExecute = true,
+            WorkingDirectory = gameDir, // game folder, not ours — else instant crash
+            Arguments = config.BlurArgs,
+        };
+    }
+
+    /// <summary>Task 11 parity seam: watch an externally-started process so the
+    /// auto-stop tests can drive a real exit (code + duration) without launching Blur.</summary>
+    internal void WatchProcessForTests(Process process) => _blurWatcher.Watch(process);
 
     private void OnBlurExited()
     {

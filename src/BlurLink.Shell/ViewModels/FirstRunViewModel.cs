@@ -172,9 +172,10 @@ public sealed class FirstRunViewModel : ShellViewModelBase
             _config.VerifiedProfileName = profile.ProfileName;
             _config.VerifiedProfileDate = date;
             _config.DiscoveryUdpPort = port;
-            if (!string.IsNullOrWhiteSpace(_settings.HostIp))
+            MainViewModel.RememberHost(_config); // Task 11: keep the R8 dict current on write
+            if (MainViewModel.RecallHost(_config) is { } remembered)
             {
-                _config.HostIpByProfile[profile.ProfileName] = _settings.HostIp.Trim();
+                _settings.HostIp = remembered; // Task 11: prefill from the dict when present
             }
 
             Notice = string.Empty;

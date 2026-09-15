@@ -5,6 +5,7 @@ using BlurLink.Core.Config;
 using BlurLink.Core.Diagnostics;
 using BlurLink.Core.FirstRun;
 using BlurLink.Core.Logging;
+using BlurLink.Core.Session;
 using BlurLink.Platform;
 using BlurLink.Shell.Notifications;
 
@@ -62,6 +63,12 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
     private string _statusBar = "Research mode — enter verified discovery parameters.";
     public string StatusBar { get => _statusBar; set => Set(ref _statusBar, value); }
 
+    private string _trayToolTip = "BlurLink — idle";
+
+    /// <summary>Task 11 (R7): mirrors the session story for the tray icon
+    /// (static art, live text). Default until the first state change.</summary>
+    public string TrayToolTip { get => _trayToolTip; private set => Set(ref _trayToolTip, value); }
+
     private string _statusChipText = "Bridge stopped";
     public string StatusChipText { get => _statusChipText; private set => Set(ref _statusChipText, value); }
 
@@ -72,6 +79,12 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
     public RelayCommand CopyDiagnosticsCommand { get; }
 
     public BlurLinkConfig Config { get; }
+
+    // Task 11: previous story code per session VM — transitions notify once,
+    // steady states never re-notify. Seeded from the live stories so startup
+    // itself is not a "transition".
+    private string _joinPrevCode = string.Empty;
+    private string _hostPrevCode = string.Empty;
 
     public MainViewModel(BlurLinkConfig config, NotificationCenter notices, IPlatformServices platform)
     {
@@ -117,7 +130,58 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
                 UpdateStatusChip();
             }
         };
+        // Task 11: one notice per story transition on each session VM (both
+        // already forward their coordinator event — code is truth, no new
+        // passthroughs needed) plus the live tray tooltip.
+        _joinPrevCode = Join.Session.Story.Code;
+        _hostPrevCode = Host.Story.Code;
+        Join.Session.StateChanged += OnJoinStateChanged;
+        Host.StateChanged += OnHostStateChanged;
         _watcher.Changed += RefreshAllAdapters;
+    }
+
+    /// <summary>Task 11: per-profile host memory (R8). The dict key is the
+    /// verified profile name, or "Research mode" when none is active.</summary>
+    internal static string ActiveProfileName(BlurLinkConfig config)
+        => string.IsNullOrWhiteSpace(config.VerifiedProfileName)
+            ? "Research mode"
+            : config.VerifiedProfileName.Trim();
+
+    /// <summary>Task 11: remember the current host IP under the active profile
+    /// (start-time hook: both session VMs call this after a successful start).</summary>
+    internal static void RememberHost(BlurLinkConfig config)
+    {
+        if (string.IsNullOrWhiteSpace(config.HostOverlayIp))
+        {
+            return;
+        }
+
+        config.HostIpByProfile[ActiveProfileName(config)] = config.HostOverlayIp.Trim();
+    }
+
+    /// <summary>Task 11: the host IP remembered for the active profile, if any
+    /// (verify-apply hook: the Task 8/9 writers prefill the Join field from this).</summary>
+    internal static string? RecallHost(BlurLinkConfig config)
+        => config.HostIpByProfile.TryGetValue(ActiveProfileName(config), out var ip)
+            && !string.IsNullOrWhiteSpace(ip)
+            ? ip
+            : null;
+
+    private void OnJoinStateChanged(SessionState state) => PushTransitionNotice(ref _joinPrevCode, state);
+
+    private void OnHostStateChanged(SessionState state) => PushTransitionNotice(ref _hostPrevCode, state);
+
+    private void PushTransitionNotice(ref string prevCode, SessionState state)
+    {
+        var story = SessionStoryTable.Describe(state);
+        var notice = SessionNotifier.Watch(prevCode, story.Code);
+        prevCode = story.Code;
+        if (notice is not null)
+        {
+            Notices.Push(notice);
+        }
+
+        TrayToolTip = $"BlurLink — {story.Headline}";
     }
 
     private void UpdateStatusChip()

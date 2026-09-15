@@ -439,6 +439,10 @@ public sealed class HostViewModel : ShellViewModelBase, IDisposable
             };
             var response = await client.SendAsync(request, CancellationToken.None).ConfigureAwait(true);
             ApplyResponse(response);
+            if (HostRunning)
+            {
+                MainViewModel.RememberHost(_config); // Task 11: per-profile host memory at start time
+            }
         }
         catch (Exception ex)
         {

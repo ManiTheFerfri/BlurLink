@@ -121,9 +121,10 @@ public sealed class VerifyProfileViewModel : ShellViewModelBase
             _config.DiscoveryUdpPort = port;
             _config.BroadcastDestination = broadcast;
             _config.PayloadPrefixHex = _stablePrefix;
-            if (!string.IsNullOrWhiteSpace(_config.HostOverlayIp))
+            MainViewModel.RememberHost(_config); // Task 11: keep the R8 dict current on write
+            if (MainViewModel.RecallHost(_config) is { } remembered)
             {
-                _config.HostIpByProfile[name] = _config.HostOverlayIp.Trim();
+                _config.HostOverlayIp = remembered; // Task 11: prefill from the dict when present
             }
 
             _applyPort(port.ToString(CultureInfo.InvariantCulture));

@@ -5,6 +5,7 @@ using BlurLink.Core.Session;
 using BlurLink.Shell.Notifications;
 using BlurLink.Shell.ViewModels;
 using BlurLink.Shell.Views;
+using System.Diagnostics;
 using Xunit;
 
 namespace BlurLink.Shell.Tests;
@@ -110,5 +111,83 @@ public sealed class JoinHeadlessTests
         center.DismissCommand.Execute(notice);
 
         Assert.Empty(center.Notices);
+    }
+
+    [Fact]
+    public void Launch_UsesGameFolderAsWorkdir()
+    {
+        var config = BlurLinkConfig.CreateDefault();
+        config.BlurExePath = @"C:\Games\Blur\Blur.exe";
+        config.BlurArgs = "--windowed --port 50001";
+
+        var psi = JoinSessionViewModel.BuildBlurStartInfo(config);
+
+        Assert.Equal(@"C:\Games\Blur\Blur.exe", psi.FileName);
+        Assert.Equal(@"C:\Games\Blur", psi.WorkingDirectory);
+        Assert.Equal("--windowed --port 50001", psi.Arguments);
+    }
+
+    [Fact]
+    public async Task BlurExit_AutoStops_WhenEnabled()
+    {
+        // The watcher marshals through the ambient context when there is one;
+        // null it so the exit lands inline and the test cannot deadlock.
+        SynchronizationContext.SetSynchronizationContext(null);
+        using var vm = ForBridge();
+        var session = vm.Session;
+        session.BridgeRunning = true;
+        session.StopWhenBlurExits = true;
+
+        using var sleeper = StartExitingProcess(42);
+        session.WatchProcessForTests(sleeper);
+
+        Assert.True(await WaitForAsync(() => !session.BridgeRunning, TimeSpan.FromSeconds(20)));
+        Assert.Equal("Bridge stopped — helper exited cleanly. No interception remains.", session.Message);
+    }
+
+    [Fact]
+    public async Task BlurExit_KeepsBridge_WhenOptedOut()
+    {
+        SynchronizationContext.SetSynchronizationContext(null);
+        using var vm = ForBridge();
+        var session = vm.Session;
+        session.BridgeRunning = true;
+        session.StopWhenBlurExits = false;
+
+        using var sleeper = StartExitingProcess(42);
+        session.WatchProcessForTests(sleeper);
+
+        Assert.True(await WaitForAsync(
+            () => session.Message.Contains("(code 42)", StringComparison.Ordinal),
+            TimeSpan.FromSeconds(20)));
+        Assert.True(session.BridgeRunning);
+        Assert.StartsWith("Blur exited", session.Message, StringComparison.Ordinal);
+    }
+
+    private static Process StartExitingProcess(int code)
+    {
+        var proc = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -NonInteractive -Command \"Start-Sleep -Milliseconds 1000; exit {code}\"")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        });
+        Assert.NotNull(proc);
+        return proc;
+    }
+
+    private static async Task<bool> WaitForAsync(Func<bool> condition, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            if (condition())
+            {
+                return true;
+            }
+
+            await Task.Delay(100).ConfigureAwait(false);
+        }
+
+        return condition();
     }
 }
