@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using BlurLink.Core.Config;
+using BlurLink.Core.Support;
 using BlurLink.Platform;
 using BlurLink.Shell.Notifications;
 using BlurLink.Shell.Services;
@@ -17,6 +18,20 @@ public sealed class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            try { CrashLog.Write(LogsDir(), e.ExceptionObject as Exception ?? new Exception("unknown")); } catch { }
+        };
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            try { CrashLog.Write(LogsDir(), e.Exception); } catch { }
+            e.SetObserved();
+        };
+        Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            try { CrashLog.Write(LogsDir(), e.Exception); } catch { }
+        };
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Embedded bridge files live in this assembly (Native/* from M4);
@@ -35,4 +50,6 @@ public sealed class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
+
+    private static string LogsDir() => Path.GetDirectoryName(Core.Logging.AppLog.DefaultPath()) ?? Path.GetTempPath();
 }

@@ -1,5 +1,9 @@
 using System.Collections.ObjectModel;
+using BlurLink.Contracts;
+using BlurLink.Core.Config;
+using BlurLink.Core.Diagnostics;
 using BlurLink.Core.Logging;
+using BlurLink.Core.Support;
 using BlurLink.Platform;
 
 namespace BlurLink.Shell.ViewModels;
@@ -12,6 +16,7 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
 {
     private readonly string? _logDirectory;
     private readonly IPlatformServices _platform;
+    private readonly BlurLinkConfig? _config;
     private readonly SynchronizationContext? _ui;
     private bool _disposed;
 
@@ -39,6 +44,15 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
 
     public RelayCommand RefreshHelperLogCommand { get; }
     public RelayCommand CopyHelperLogCommand { get; }
+    public RelayCommand BundleCommand { get; }
+
+    private string _bundleResult = "No support bundle created yet.";
+    /// <summary>Last support-bundle outcome: the zip path or the error.</summary>
+    public string BundleResult { get => _bundleResult; set => Set(ref _bundleResult, value); }
+
+    private string _crashTail = "No crashes recorded.";
+    /// <summary>Newest crash file tail-20, or "No crashes recorded.".</summary>
+    public string CrashTail { get => _crashTail; set => Set(ref _crashTail, value); }
 
     /// <summary>The Verify section child (Task 9). Null in older constructions
     /// and tests that pass nothing — the view hides the section then.</summary>
@@ -54,16 +68,21 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
     /// (production always passes both explicitly).
     /// <paramref name="verify"/> null hides the Verify section (older
     /// constructions, including the Task 6 tests, pass nothing).
+    /// <paramref name="config"/> null leaves the bundle command reporting
+    /// "configuration unavailable" (older constructions pass nothing).
     /// </summary>
-    public DiagnosticsViewModel(string? logDirectory = null, IPlatformServices? platform = null, VerifyProfileViewModel? verify = null)
+    public DiagnosticsViewModel(string? logDirectory = null, IPlatformServices? platform = null, VerifyProfileViewModel? verify = null, BlurLinkConfig? config = null)
     {
         _logDirectory = logDirectory;
         _platform = platform ?? new ThrowingPlatformServices();
         Verify = verify;
+        _config = config;
         _ui = SynchronizationContext.Current;
         RefreshHelperLogCommand = new RelayCommand(_ => RefreshHelperLog());
         CopyHelperLogCommand = new RelayCommand(_ => CopyHelperLog());
+        BundleCommand = new RelayCommand(_ => CreateBundle());
         RefreshHelperLog();
+        RefreshCrashTail();
         StartHelperLogTimer();
     }
 
@@ -151,6 +170,57 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
         catch (Exception ex)
         {
             HelperLogStatus = "Copy failed: " + ex.Message;
+        }
+    }
+
+    private string FindLogsDir()
+        => _logDirectory
+            ?? Path.GetDirectoryName(AppLog.DefaultPath())
+            ?? Path.GetTempPath();
+
+    private void CreateBundle()
+    {
+        try
+        {
+            if (_config is null)
+            {
+                BundleResult = "configuration unavailable";
+                return;
+            }
+
+            var text = DiagnosticsCollector.BuildDiagnosticsText(
+                _config.HostOverlayIp, _config.DiscoveryUdpPort, _config.SelectedAdapterIfIndex);
+            var json = BlurLinkConfigStore.ExportJson(_config);
+            var destDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "BlurLink", "bundles");
+            BundleResult = SupportBundle.Create(FindLogsDir(), text, json, destDir);
+        }
+        catch (Exception ex)
+        {
+            BundleResult = "Bundle failed: " + ex.Message;
+        }
+    }
+
+    public void RefreshCrashTail()
+    {
+        try
+        {
+            var newest = CrashLog.Newest(FindLogsDir());
+            if (newest is null)
+            {
+                CrashTail = "No crashes recorded.";
+                return;
+            }
+
+            var lines = LogTail.Read(newest, maxLines: 20);
+            CrashTail = lines.Count == 0
+                ? $"{Path.GetFileName(newest)} (empty)."
+                : $"{Path.GetFileName(newest)}:{Environment.NewLine}{string.Join(Environment.NewLine, lines)}";
+        }
+        catch (Exception ex)
+        {
+            CrashTail = "Could not read crash log: " + ex.Message;
         }
     }
 

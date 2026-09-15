@@ -89,7 +89,7 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
             s => Join.Settings.DiscoveryPort = s,
             s => Join.Settings.BroadcastDestination = s,
             s => Join.Settings.PayloadHex = s,
-            OnConfigChanged));
+            OnConfigChanged), config: Config);
 
         NavigateCommand = new RelayCommand(p =>
         {

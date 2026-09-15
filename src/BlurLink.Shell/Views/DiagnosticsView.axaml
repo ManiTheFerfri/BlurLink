@@ -28,6 +28,32 @@
       </StackPanel>
     </Border>
 
+    <!-- ============ Support bundle (Task 10) ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="SUPPORT BUNDLE" Classes="label" />
+        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="One click: app logs plus diagnostics metadata, zipped. Logs only — a stray capture in the logs folder can never enter a bundle." />
+        <WrapPanel>
+          <Button Content="Create support bundle" Command="{Binding BundleCommand}"
+                  AutomationProperties.Name="Create support bundle" />
+        </WrapPanel>
+        <TextBlock Text="{Binding BundleResult}" TextWrapping="Wrap"
+                   FontSize="11" Margin="0,8,0,0" />
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Crash log (Task 10) ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="CRASH LOG" Classes="label" />
+        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="Newest local crash capture (last 20 lines). Metadata only; never packet contents." />
+        <TextBlock Text="{Binding CrashTail}" TextWrapping="Wrap"
+                   FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+      </StackPanel>
+    </Border>
+
     <!-- ============ Verify profile (Task 9) ============ -->
     <Border Classes="card" IsVisible="{Binding HasVerify}">
       <StackPanel>
