@@ -68,6 +68,14 @@ struct BridgeCounters {
   std::int64_t injection_errors = 0;
   std::int64_t fragments_rejected = 0;
   std::int64_t dedup_skipped = 0;
+  // Outbound broadcasts refused by the code-side payload-prefix gate
+  // (reinjected, never cloned). Observe-only refusal signal.
+  std::int64_t payload_gate_skipped = 0;
+  // Observe-only reply-shape outcomes (Task 12, R6). The bridge diverts
+  // outbound queries only, so these stay 0 by construction; they exist so
+  // the status contract is uniform across sessions.
+  std::int64_t reply_shape_checked = 0;
+  std::int64_t reply_shape_mismatch = 0;
 };
 
 class Bridge {

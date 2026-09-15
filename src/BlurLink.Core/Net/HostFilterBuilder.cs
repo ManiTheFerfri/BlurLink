@@ -18,7 +18,7 @@ public readonly record struct HostPlayerKey(string LanIp, int BlurSourcePort);
 /// </summary>
 public static class HostFilterBuilder
 {
-    public static string Build(int discoveryPort, IReadOnlyList<HostPlayerKey> players)
+    public static string Build(int discoveryPort, IReadOnlyList<HostPlayerKey> players, int? adapterIfIndex = null)
     {
         if (discoveryPort is < 1 or > 65535)
         {
@@ -49,17 +49,21 @@ public static class HostFilterBuilder
         // LAN address into one address term, which is all the filter needs.
         var distinct = canonical.Distinct().ToArray();
 
+        // An adapter index scopes every term to one interface; absent (or
+        // non-positive) leaves the filter exactly as it was before.
+        var ifIdxTerm = adapterIfIndex is > 0 ? $" && ifIdx == {adapterIfIndex}" : string.Empty;
+
         var terms = new List<string>
         {
-            $"(inbound && ip && udp && udp.DstPort == {BlurLinkConstants.HostAnnounceUdpPort})",
+            $"(inbound && ip && udp && udp.DstPort == {BlurLinkConstants.HostAnnounceUdpPort}{ifIdxTerm})",
         };
 
         if (distinct.Length > 0)
         {
             var srcTerms = string.Join(" || ", distinct.Select(ip => $"ip.SrcAddr == {ip}"));
             var dstTerms = string.Join(" || ", distinct.Select(ip => $"ip.DstAddr == {ip}"));
-            terms.Add($"(inbound && ip && udp && udp.DstPort == {discoveryPort} && ({srcTerms}))");
-            terms.Add($"(outbound && ip && udp && udp.SrcPort == {discoveryPort} && ({dstTerms}))");
+            terms.Add($"(inbound && ip && udp && udp.DstPort == {discoveryPort} && ({srcTerms}){ifIdxTerm})");
+            terms.Add($"(outbound && ip && udp && udp.SrcPort == {discoveryPort} && ({dstTerms}){ifIdxTerm})");
         }
 
         return string.Join(" || ", terms);

@@ -73,7 +73,7 @@ bool DecodeAnnounce(const std::uint8_t* data, std::size_t len, AnnouncePacket& o
 
 std::string BuildHostFilterString(int discovery_port,
                                   const std::vector<std::array<std::uint8_t, 4>>& player_lans,
-                                  std::string& error) {
+                                  std::string& error, int adapter_if_index) {
   error.clear();
 
   if (discovery_port < 1 || discovery_port > 65535) {
@@ -102,7 +102,13 @@ std::string BuildHostFilterString(int discovery_port,
   }
 
   std::ostringstream out;
-  out << "(inbound && ip && udp && udp.DstPort == " << kHostAnnounceUdpPort << ")";
+  // An adapter index scopes every term to one interface; absent (or
+  // non-positive) leaves the filter exactly as it was before.
+  std::string ifidx;
+  if (adapter_if_index > 0) {
+    ifidx = " && ifIdx == " + std::to_string(adapter_if_index);
+  }
+  out << "(inbound && ip && udp && udp.DstPort == " << kHostAnnounceUdpPort << ifidx << ")";
 
   if (!distinct.empty()) {
     std::string src_terms;
@@ -119,10 +125,10 @@ std::string BuildHostFilterString(int discovery_port,
     }
     // Inbound term: the prerequisite diagnostic — are player forwards arriving?
     out << " || (inbound && ip && udp && udp.DstPort == " << discovery_port << " && ("
-        << src_terms << "))";
+        << src_terms << ")" << ifidx << ")";
     // Outbound term: the host's replies to those players.
     out << " || (outbound && ip && udp && udp.SrcPort == " << discovery_port << " && ("
-        << dst_terms << "))";
+        << dst_terms << ")" << ifidx << ")";
   }
 
   return out.str();

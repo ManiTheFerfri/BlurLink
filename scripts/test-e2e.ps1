@@ -325,8 +325,8 @@ if ($PreflightOnly) {
   exit 0
 }
 
-# Host mode validates adapterIfIndex but does not put it in the filter, so this
-# only has to be a real, non-zero interface. Take the one owning HostIp.
+# Task 12: both filters scope every term to adapterIfIndex, so this must be a
+# real, non-zero interface. Take the one owning HostIp.
 $AdapterIfIndex = 1
 try {
   $found = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction Stop |
@@ -565,7 +565,8 @@ try {
     Check 'start-host-ok' ((Test-HasText $r '"type":"status"') -and (Test-HasText $r '"hostActive":true')) $r
 
     $s = Get-Status
-    Check 'host-filter-is-host-modes-own' (Test-HasText $s.hostFilter '47811') $s.hostFilter
+    Check 'host-filter-is-host-modes-own' ((Test-HasText $s.hostFilter '47811') -and
+      (Test-HasText $s.hostFilter "ifIdx == $AdapterIfIndex")) $s.hostFilter
     Check 'host-filter-has-no-players-yet' (-not (Test-HasText $s.hostFilter $PlayerLan)) $s.hostFilter
 
     # --- stage 2: the player introduces itself ---
@@ -706,7 +707,8 @@ try {
 
     $s = Get-Status
     Check 'bridge-reports-its-own-filter' ((Test-HasText $s.filter 'outbound') -and
-      (Test-HasText $s.filter "$DiscoveryPort") -and (Test-HasText $s.filter $BridgeBcast)) $s.filter
+      (Test-HasText $s.filter "$DiscoveryPort") -and (Test-HasText $s.filter $BridgeBcast) -and
+      (Test-HasText $s.filter "ifIdx == $AdapterIfIndex")) $s.filter
 
     # --- stage 10/11: a Blur-shaped broadcast is captured and cloned out ---
     $before = Get-Status

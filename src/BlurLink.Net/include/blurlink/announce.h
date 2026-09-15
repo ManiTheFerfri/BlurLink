@@ -41,8 +41,12 @@ bool DecodeAnnounce(const std::uint8_t* data, std::size_t len, AnnouncePacket& o
 // The player's Blur source port is deliberately not a parameter: a port mismatch
 // must remain visible to the code-side matcher rather than being swallowed by the
 // filter.
+//
+// adapter_if_index scopes every term to one interface (` && ifIdx == N`);
+// 0 (or negative) leaves the filter unscoped, exactly as before. Only the
+// canonical numeric form is ever interpolated.
 std::string BuildHostFilterString(int discovery_port,
                                   const std::vector<std::array<std::uint8_t, 4>>& player_lans,
-                                  std::string& error);
+                                  std::string& error, int adapter_if_index = 0);
 
 }  // namespace blurlink

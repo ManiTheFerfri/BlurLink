@@ -89,6 +89,9 @@ public sealed class JoinSessionViewModel : ShellViewModelBase, IDisposable
     /// <summary>User-facing session story, derived from the coordinator state. Replaces the hand-built poll sentences.</summary>
     public SessionStory Story => SessionStoryTable.Describe(_coordinator.State);
 
+    /// <summary>Current coordinator snapshot for the Diagnostics sections (Task 12).</summary>
+    public SessionState CoordinatorState => _coordinator.State;
+
     /// <summary>Raw helper counters for the Counters disclosure. Single source: the coordinator state.</summary>
     public string RawCounters =>
         $"captured={_coordinator.State.Counters.Captured} forwarded={_coordinator.State.Counters.Forwarded} "

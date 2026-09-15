@@ -50,6 +50,7 @@
     <ClInclude Include="include\blurlink\json_min.h" />
     <ClInclude Include="include\blurlink\packet.h" />
     <ClInclude Include="include\blurlink\rate_limiter.h" />
+    <ClInclude Include="include\blurlink\reply_shape.h" />
     <ClInclude Include="include\blurlink\windivert_api.h" />
   </ItemGroup>
   <ItemGroup>

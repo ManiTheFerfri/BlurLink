@@ -83,6 +83,14 @@ public sealed class IpcStartRequest
 
     [JsonPropertyName("adapterIfIndex")]
     public int AdapterIfIndex { get; set; }
+
+    /// <summary>Observe-only reply-shape expectation from the verified profile. Null/empty = off.</summary>
+    [JsonPropertyName("expectedReplyLength")]
+    public int? ExpectedReplyLength { get; set; }
+
+    /// <summary>Observe-only reply-shape expectation from the verified profile. Null/empty = off.</summary>
+    [JsonPropertyName("expectedReplyPrefixHex")]
+    public string ExpectedReplyPrefixHex { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -102,6 +110,14 @@ public sealed class IpcStartHostRequest
 
     [JsonPropertyName("adapterIfIndex")]
     public int AdapterIfIndex { get; set; }
+
+    /// <summary>Observe-only reply-shape expectation from the verified profile. Null/empty = off.</summary>
+    [JsonPropertyName("expectedReplyLength")]
+    public int? ExpectedReplyLength { get; set; }
+
+    /// <summary>Observe-only reply-shape expectation from the verified profile. Null/empty = off.</summary>
+    [JsonPropertyName("expectedReplyPrefixHex")]
+    public string ExpectedReplyPrefixHex { get; set; } = string.Empty;
 
     [JsonPropertyName("rateLimitPerSecond")]
     public int RateLimitPerSecond { get; set; } = BlurLinkConstants.DefaultRateLimitPerSecond;
@@ -277,6 +293,19 @@ public sealed class IpcStatusResponse
     /// <summary>Echoes of our own reinjections suppressed by the dedup cache.</summary>
     [JsonPropertyName("dedupSkipped")]
     public long DedupSkipped { get; set; }
+
+    /// <summary>Outbound broadcasts refused by the code-side payload-prefix gate
+    /// (reinjected, never cloned). Observe-only refusal signal.</summary>
+    [JsonPropertyName("payloadGateSkipped")]
+    public long PayloadGateSkipped { get; set; }
+
+    /// <summary>Replies evaluated against the reply-shape expectation (observe-only).</summary>
+    [JsonPropertyName("replyShapeChecked")]
+    public long ReplyShapeChecked { get; set; }
+
+    /// <summary>Evaluated replies whose length or leading prefix differed (observe-only).</summary>
+    [JsonPropertyName("replyShapeMismatch")]
+    public long ReplyShapeMismatch { get; set; }
 
     /// <summary>Introductions this helper has sent to a host running host mode.</summary>
     [JsonPropertyName("announcementsSent")]

@@ -202,6 +202,24 @@ try {
   $r = Send-PipeLine $conn.Reader $conn.Writer $bad
   Check 'start-validation-error' ($r.Contains('"type":"error"')) $r
 
+  # Task 12: a bridge start carrying the observe-only shape fields parses and
+  # reaches the clean driver-error path unelevated (synthetic prefix, never
+  # capture bytes). Same shape as the validation-path checks above.
+  $shapeStart = @{
+    type = 'start'; token = $token; hostOverlayIp = '100.96.47.177'
+    discoveryUdpPort = 12345; broadcastDestination = '255.255.255.255'
+    payloadPrefixHex = ''; preserveOriginalBroadcast = $true
+    rateLimitPerSecond = 10; rateLimitBurst = 20; adapterIfIndex = 0
+    expectedReplyLength = 160; expectedReplyPrefixHex = 'AA BB CC DD'
+  } | ConvertTo-Json -Compress
+  $r = Send-PipeLine $conn.Reader $conn.Writer $shapeStart
+  if (Test-Path $dllNextToHelper) {
+    $okShapeBridge = $r.Contains('"type":"error"') -and -not $r.Contains('not found')
+  } else {
+    $okShapeBridge = $r.Contains('"type":"error"') -and $r.Contains('WinDivert')
+  }
+  Check 'shape-fields-bridge-parses' $okShapeBridge $r
+
   $r = Send-PipeLine $conn.Reader $conn.Writer (@{ type = 'stop'; token = $token } | ConvertTo-Json -Compress)
   Check 'stop-ok' ($r.Contains('"type":"status"')) $r
 
@@ -259,6 +277,20 @@ try {
     $okHost = $r.Contains('"type":"error"') -and $r.Contains('WinDivert')
   }
   Check 'start-host-reaches-driver' $okHost $r
+
+  # Task 12: a host start carrying the observe-only shape fields parses and
+  # reaches the clean driver-error path unelevated (synthetic prefix, never
+  # capture bytes). Same shape as the validation-path checks above.
+  $shapeHostStart = @{ type = 'start_host'; token = $token; discoveryUdpPort = 50001
+    adapterIfIndex = 1; rateLimitPerSecond = 10; rateLimitBurst = 20
+    expectedReplyLength = 160; expectedReplyPrefixHex = 'AA BB CC DD' } | ConvertTo-Json -Compress
+  $r = Send-PipeLine $conn.Reader $conn.Writer $shapeHostStart
+  if (Test-Path $dllNextToHelper) {
+    $okShapeHost = $r.Contains('"type":"error"') -and -not $r.Contains('not found')
+  } else {
+    $okShapeHost = $r.Contains('"type":"error"') -and $r.Contains('WinDivert')
+  }
+  Check 'shape-fields-host-parses' $okShapeHost $r
 
   # A failed host start must release the exclusive session, like a bridge start.
   $r = Send-PipeLine $conn.Reader $conn.Writer $hostStart

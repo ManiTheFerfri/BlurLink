@@ -459,6 +459,7 @@ void Bridge::WorkerLoop() {
       // Filter over-matched (shouldn't happen): preserve original only.
       {
         std::lock_guard<std::mutex> lock(mutex_);
+        ++counters_.payload_gate_skipped;
         meta.action = "reinjected";
         PushRecent(meta);
       }

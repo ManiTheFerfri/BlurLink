@@ -102,7 +102,8 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
             s => Join.Settings.DiscoveryPort = s,
             s => Join.Settings.BroadcastDestination = s,
             s => Join.Settings.PayloadHex = s,
-            OnConfigChanged), config: Config);
+            OnConfigChanged), config: Config,
+            sessionStates: () => (Join.Session.CoordinatorState, Host.CoordinatorState));
 
         NavigateCommand = new RelayCommand(p =>
         {
@@ -167,9 +168,17 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
             ? ip
             : null;
 
-    private void OnJoinStateChanged(SessionState state) => PushTransitionNotice(ref _joinPrevCode, state);
+    private void OnJoinStateChanged(SessionState state)
+    {
+        PushTransitionNotice(ref _joinPrevCode, state);
+        Diagnostics.RefreshSessionSections();
+    }
 
-    private void OnHostStateChanged(SessionState state) => PushTransitionNotice(ref _hostPrevCode, state);
+    private void OnHostStateChanged(SessionState state)
+    {
+        PushTransitionNotice(ref _hostPrevCode, state);
+        Diagnostics.RefreshSessionSections();
+    }
 
     private void PushTransitionNotice(ref string prevCode, SessionState state)
     {

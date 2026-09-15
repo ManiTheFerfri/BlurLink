@@ -18,7 +18,10 @@
 #include <sys/stat.h>
 
 #include <atomic>
+#include <algorithm>
 #include <chrono>
+#include <optional>
+#include <vector>
 #include <cstdint>
 #include <csignal>
 #include <iostream>
@@ -174,16 +177,31 @@ std::string StatusJson(const blurlink::Bridge& bridge, const blurlink::Sniffer& 
   auto sniff = sniffer.results();
   const auto hc = host.counters();
   const auto hplayers = host.players();
+  // Observe-only reply-shape counters (Task 12, R6). The two sessions are
+  // mutually exclusive and each Start resets its own counters, so exactly one
+  // side is ever live: report the live side when one runs, else the last-known
+  // maximum, so a stopped session's counts stay visible instead of vanishing.
+  const auto shape_checked = bridge.active()    ? c.reply_shape_checked
+                               : host.active()  ? hc.reply_shape_checked
+                                                : std::max(c.reply_shape_checked,
+                                                           hc.reply_shape_checked);
+  const auto shape_mismatch = bridge.active()   ? c.reply_shape_mismatch
+                                : host.active() ? hc.reply_shape_mismatch
+                                                : std::max(c.reply_shape_mismatch,
+                                                           hc.reply_shape_mismatch);
   std::ostringstream os;
   os << "{\"type\":\"status\",\"active\":" << (bridge.active() ? "true" : "false")
      << ",\"watchdogSec\":" << g_watchdog_sec
      << ",\"filter\":\"" << Escape(bridge.filter()) << "\""
+     << ",\"replyShapeChecked\":" << shape_checked
+     << ",\"replyShapeMismatch\":" << shape_mismatch
      << ",\"captured\":" << c.captured << ",\"forwarded\":" << c.forwarded
      << ",\"reinjected\":" << c.reinjected << ",\"dropped\":" << c.dropped
      << ",\"injectionErrors\":" << c.injection_errors
-     << ",\"fragmentsRejected\":" << c.fragments_rejected
-     << ",\"dedupSkipped\":" << c.dedup_skipped
-     << ",\"announcementsSent\":" << c.announcements_sent
+      << ",\"fragmentsRejected\":" << c.fragments_rejected
+      << ",\"dedupSkipped\":" << c.dedup_skipped
+      << ",\"payloadGateSkipped\":" << c.payload_gate_skipped
+      << ",\"announcementsSent\":" << c.announcements_sent
      << ",\"lastError\":\"" << Escape(bridge.last_error()) << "\""
      << ",\"routeInterface\":\"" << Escape(bridge.route_interface()) << "\""
      << ",\"sniffActive\":" << (sniffer.active() ? "true" : "false")
@@ -250,6 +268,11 @@ bool ConfigFromStart(const std::string& body, blurlink::BridgeConfig& out, std::
   std::string host, bcast, hex;
   long long port = 0, rate = 10, burst = 20, ifidx = 0;
   bool preserve = true;
+  // Observe-only reply-shape expectation (Task 12, R6). Absent/null means off.
+  long long shape_len = -1;
+  std::string shape_hex;
+  const bool have_shape_len = minjson::GetInt(body, "expectedReplyLength", shape_len);
+  minjson::GetString(body, "expectedReplyPrefixHex", shape_hex);
   if (!minjson::GetString(body, "hostOverlayIp", host)) {
     err = "missing hostOverlayIp";
     return false;
@@ -312,6 +335,23 @@ bool ConfigFromStart(const std::string& body, blurlink::BridgeConfig& out, std::
     err = r.error;
     return false;
   }
+  // The shape expectation is validated exactly like the payload prefix: bad
+  // hex is a clean validation error, never a crash, never a filter term.
+  std::vector<std::uint8_t> shape_prefix;
+  if (!shape_hex.empty()) {
+    if (auto r = ParseHexSignature(shape_hex, shape_prefix); !r.ok) {
+      err = r.error;
+      return false;
+    }
+  }
+  std::optional<int> shape_length;
+  if (have_shape_len) {
+    if (shape_len < 0 || shape_len > 65535) {
+      err = "expectedReplyLength must be 0-65535";
+      return false;
+    }
+    shape_length = static_cast<int>(shape_len);
+  }
   if (rate < 1 || rate > kMaxRatePerSecond || burst < 1 || burst > kMaxRateBurst) {
     err = "rate limit out of range";
     return false;
@@ -327,6 +367,8 @@ bool ConfigFromStart(const std::string& body, blurlink::BridgeConfig& out, std::
   out.rate_per_second = static_cast<int>(rate);
   out.rate_burst = static_cast<int>(burst);
   out.adapter_if_index = static_cast<int>(ifidx);
+  out.expected_reply_length = shape_length;
+  out.expected_reply_prefix = std::move(shape_prefix);
   return true;
 }
 
@@ -337,6 +379,10 @@ bool ConfigFromStart(const std::string& body, blurlink::BridgeConfig& out, std::
 bool ConfigFromHostStart(const std::string& body, blurlink::HostConfig& out, std::string& err) {
   using namespace blurlink;
   long long port = 0, rate = 10, burst = 20, ifidx = 0;
+  long long shape_len = -1;
+  std::string shape_hex;
+  const bool have_shape_len = minjson::GetInt(body, "expectedReplyLength", shape_len);
+  minjson::GetString(body, "expectedReplyPrefixHex", shape_hex);
   if (!minjson::GetInt(body, "discoveryUdpPort", port)) {
     err = "missing discoveryUdpPort (detect it first)";
     return false;
@@ -345,10 +391,26 @@ bool ConfigFromHostStart(const std::string& body, blurlink::HostConfig& out, std
   minjson::GetInt(body, "rateLimitBurst", burst);
   minjson::GetInt(body, "adapterIfIndex", ifidx);
 
+  std::vector<std::uint8_t> shape_prefix;
+  if (!shape_hex.empty()) {
+    if (auto r = ParseHexSignature(shape_hex, shape_prefix); !r.ok) {
+      err = r.error;
+      return false;
+    }
+  }
+  if (have_shape_len && (shape_len < 0 || shape_len > 65535)) {
+    err = "expectedReplyLength must be 0-65535";
+    return false;
+  }
+
   out.discovery_port = static_cast<int>(port);
   out.adapter_if_index = static_cast<int>(ifidx);
   out.rate_per_second = static_cast<int>(rate);
   out.rate_burst = static_cast<int>(burst);
+  if (have_shape_len) {
+    out.expected_reply_length = static_cast<int>(shape_len);
+  }
+  out.expected_reply_prefix = std::move(shape_prefix);
 
   // The same validation the portable tests exercise; the helper never trusts
   // the GUI any more than it does for a bridge start.

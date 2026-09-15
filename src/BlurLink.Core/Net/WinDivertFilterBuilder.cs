@@ -13,7 +13,8 @@ public static class WinDivertFilterBuilder
     public sealed record FilterInput(
         int DiscoveryUdpPort,
         string BroadcastDestination,
-        string? AdapterBroadcast = null);
+        string? AdapterBroadcast = null,
+        int? AdapterIfIndex = null);
 
     public static string Build(FilterInput input)
     {
@@ -31,7 +32,15 @@ public static class WinDivertFilterBuilder
 
         // Narrow: outbound IPv4 UDP only, exact dst port + exact dst address.
         // "true"/"udp"-style broad filters are intentionally impossible here.
-        return $"outbound && ip && udp && udp.DstPort == {input.DiscoveryUdpPort} && ip.DstAddr == {ipLiteral}";
+        // An adapter index scopes the same narrow filter to one interface;
+        // absent (or non-positive) means every interface, exactly as before.
+        var filter = $"outbound && ip && udp && udp.DstPort == {input.DiscoveryUdpPort} && ip.DstAddr == {ipLiteral}";
+        if (input.AdapterIfIndex is > 0)
+        {
+            filter += $" && ifIdx == {input.AdapterIfIndex}";
+        }
+
+        return filter;
     }
 
     private static uint ToUInt32BE(IPAddress addr)

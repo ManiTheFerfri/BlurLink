@@ -195,6 +195,11 @@ ValidationResult BuildFilterString(const BridgeConfig& cfg, std::string& out_fil
   std::ostringstream os;
   os << "outbound && ip && udp && udp.DstPort == " << cfg.discovery_port
      << " && ip.DstAddr == " << Ipv4ToString(cfg.broadcast);
+  // An adapter index scopes the same narrow filter to one interface; absent
+  // (or non-positive) means every interface, exactly as before.
+  if (cfg.adapter_if_index > 0) {
+    os << " && ifIdx == " << cfg.adapter_if_index;
+  }
   out_filter = os.str();
   return ValidationResult::Ok();
 }

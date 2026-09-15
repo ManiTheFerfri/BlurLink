@@ -3,6 +3,7 @@ using BlurLink.Contracts;
 using BlurLink.Core.Config;
 using BlurLink.Core.Diagnostics;
 using BlurLink.Core.Logging;
+using BlurLink.Core.Session;
 using BlurLink.Core.Support;
 using BlurLink.Platform;
 
@@ -62,6 +63,112 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
     public bool HasVerify => Verify is not null;
 
     /// <summary>
+    /// Live session snapshots from both session VMs, supplied by MainViewModel
+    /// (Task 12). Null in older constructions — the shape and refusals sections
+    /// stay hidden then.
+    /// </summary>
+    private readonly Func<(SessionState Join, SessionState Host)>? _sessionStates;
+
+    /// <summary>Whether live session snapshots are available (bound by the view).</summary>
+    public bool HasSessionStates => _sessionStates is not null;
+
+    /// <summary>
+    /// Observe-only reply-shape counters (Task 12, R6). Each value comes from
+    /// the live session's side when one runs, else the last-known maximum —
+    /// the two snapshots describe the same helper at different moments, so a
+    /// stale all-zero side must never hide a fresh non-zero one.
+    /// </summary>
+    public long ReplyShapeChecked => PickLiveOrMax(s => s.Counters.ReplyShapeChecked);
+
+    /// <inheritdoc cref="ReplyShapeChecked"/>
+    public long ReplyShapeMismatch => PickLiveOrMax(s => s.Counters.ReplyShapeMismatch);
+
+    /// <summary>Whether the Reply shape section is present (bound by the view).</summary>
+    public bool HasReplyShape => HasSessionStates && (ReplyShapeChecked > 0 || ReplyShapeMismatch > 0);
+
+    /// <summary>One line for the Reply shape section. Never blocked, never a drop.</summary>
+    public string ReplyShapeText =>
+        $"{ReplyShapeChecked} checked, {ReplyShapeMismatch} mismatched (observe-only — never blocked)";
+
+    /// <summary>
+    /// Non-zero refusals only, each with its explanation and count (Task 12).
+    /// Every helper counter is read through the live-or-last-known rule, so
+    /// mirrored snapshots can never double-count.
+    /// </summary>
+    public IReadOnlyList<(string Text, long Count)> Refusals => BuildRefusals();
+
+    /// <summary>Whether any refusal has been recorded (bound by the view).</summary>
+    public bool HasRefusals => Refusals.Count > 0;
+
+    /// <summary>Status line for the Refusals section (bound by the view).</summary>
+    public string RefusalsStatus => HasRefusals
+        ? "Refused packets were kept, never misdelivered."
+        : "No refusals recorded.";
+
+    private long PickLiveOrMax(Func<SessionState, long> pick)
+    {
+        if (_sessionStates is null)
+        {
+            return 0;
+        }
+
+        var (join, host) = _sessionStates();
+        if (join.Mode == SessionMode.Bridge)
+        {
+            return pick(join);
+        }
+
+        if (host.Mode == SessionMode.Host)
+        {
+            return pick(host);
+        }
+
+        return Math.Max(pick(join), pick(host));
+    }
+
+    private IReadOnlyList<(string Text, long Count)> BuildRefusals()
+    {
+        if (_sessionStates is null)
+        {
+            return Array.Empty<(string, long)>();
+        }
+
+        // One rule for every row: the live session's side when one runs, else
+        // the last-known maximum. Each helper counter is read through that
+        // single rule, so mirrored snapshots can never double-count.
+        var rows = new List<(string Code, long Count)>
+        {
+            ("dedup", PickLiveOrMax(s => s.Counters.DedupSkipped)),
+            ("rate", PickLiveOrMax(s => s.Counters.Dropped)),
+            ("payload-gate", PickLiveOrMax(s => s.Counters.PayloadGateSkipped)),
+            ("fragments", PickLiveOrMax(s => s.Counters.FragmentsRejected)),
+            ("host-broadcast", PickLiveOrMax(s => s.Counters.HostBroadcastReplies)),
+            ("host-ambiguous", PickLiveOrMax(s => s.Counters.HostAmbiguousReplies)),
+            ("host-unmatched", PickLiveOrMax(s => s.Counters.HostUnmatchedReplies)),
+            ("host-collision", PickLiveOrMax(s => s.Counters.HostCollisions)),
+            ("announce-rejected", PickLiveOrMax(s => s.Counters.HostAnnounceRejected)),
+            ("injection-error", PickLiveOrMax(s => s.Counters.InjectionErrors + s.Counters.HostInjectionErrors)),
+        };
+
+        return rows
+            .Where(r => r.Count > 0)
+            .Select(r => (RefusalExplainer.Explain(r.Code), r.Count))
+            .ToList();
+    }
+
+    /// <summary>Re-read the session sections after a state transition or poll tick.</summary>
+    public void RefreshSessionSections()
+    {
+        Raise(nameof(ReplyShapeChecked));
+        Raise(nameof(ReplyShapeMismatch));
+        Raise(nameof(HasReplyShape));
+        Raise(nameof(ReplyShapeText));
+        Raise(nameof(Refusals));
+        Raise(nameof(HasRefusals));
+        Raise(nameof(RefusalsStatus));
+    }
+
+    /// <summary>
     /// <paramref name="logDirectory"/> null means the real logs dir;
     /// tests pass a temp dir. <paramref name="platform"/> null gets a
     /// throwaway that throws <see cref="InvalidOperationException"/> on use
@@ -70,13 +177,16 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
     /// constructions, including the Task 6 tests, pass nothing).
     /// <paramref name="config"/> null leaves the bundle command reporting
     /// "configuration unavailable" (older constructions pass nothing).
+    /// <paramref name="sessionStates"/> null hides the shape and refusals
+    /// sections (older constructions, including the Task 6 tests, pass nothing).
     /// </summary>
-    public DiagnosticsViewModel(string? logDirectory = null, IPlatformServices? platform = null, VerifyProfileViewModel? verify = null, BlurLinkConfig? config = null)
+    public DiagnosticsViewModel(string? logDirectory = null, IPlatformServices? platform = null, VerifyProfileViewModel? verify = null, BlurLinkConfig? config = null, Func<(SessionState Join, SessionState Host)>? sessionStates = null)
     {
         _logDirectory = logDirectory;
         _platform = platform ?? new ThrowingPlatformServices();
         Verify = verify;
         _config = config;
+        _sessionStates = sessionStates;
         _ui = SynchronizationContext.Current;
         RefreshHelperLogCommand = new RelayCommand(_ => RefreshHelperLog());
         CopyHelperLogCommand = new RelayCommand(_ => CopyHelperLog());
@@ -121,6 +231,7 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
                     if (!_disposed)
                     {
                         RefreshHelperLog();
+                        RefreshSessionSections();
                     }
                 }, null);
             }

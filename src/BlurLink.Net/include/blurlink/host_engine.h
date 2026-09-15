@@ -16,6 +16,7 @@
 #include <array>
 #include <cstdint>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,11 @@ struct HostConfig {
   int adapter_if_index = 0;  // required: which overlay adapter to watch
   int rate_per_second = kDefaultRatePerSecond;
   int rate_burst = kDefaultRateBurst;
+  // Observe-only reply-shape expectation from the verified profile (Task 12,
+  // R6: length + leading prefix). Empty means off. Counted where replies are
+  // classified (Dispatch), never enforced: the outcome is final either way.
+  std::optional<int> expected_reply_length;
+  std::vector<std::uint8_t> expected_reply_prefix;
   // There is deliberately no "preserve original" toggle: the original reply is
   // ALWAYS reinjected unchanged, so the host's own LAN is unaffected.
 };
@@ -53,6 +59,11 @@ struct HostCounters {
   std::int64_t ambiguous_replies = 0;
   std::int64_t unmatched_replies = 0;
   std::int64_t filter_reopens = 0;
+  // Observe-only reply-shape outcomes (Task 12, R6). Checked counts every
+  // prospective reply evaluated against a set expectation; mismatch counts
+  // the failures. Neither ever changes the outcome.
+  std::int64_t reply_shape_checked = 0;
+  std::int64_t reply_shape_mismatch = 0;
 };
 
 // What the caller should do with one captured packet.

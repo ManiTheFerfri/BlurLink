@@ -3,6 +3,7 @@
 #include <cstddef>
 
 #include "blurlink/packet.h"
+#include "blurlink/reply_shape.h"
 
 namespace blurlink {
 
@@ -30,12 +31,14 @@ HostEngine::HostEngine(HostConfig cfg) : cfg_(cfg) {}
 
 std::string HostEngine::FilterStringLocked() const {
   std::string err;
-  return BuildHostFilterString(cfg_.discovery_port, roster_.FilterAddresses(), err);
+  return BuildHostFilterString(cfg_.discovery_port, roster_.FilterAddresses(), err,
+                               cfg_.adapter_if_index);
 }
 
 std::string HostEngine::FilterString(std::string& error) const {
   std::lock_guard<std::mutex> lock(mutex_);
-  return BuildHostFilterString(cfg_.discovery_port, roster_.FilterAddresses(), error);
+  return BuildHostFilterString(cfg_.discovery_port, roster_.FilterAddresses(), error,
+                               cfg_.adapter_if_index);
 }
 
 void HostEngine::MarkRosterChanged(std::int64_t now_ms) {
@@ -106,6 +109,19 @@ HostOutcome HostEngine::Dispatch(const std::uint8_t* packet, std::size_t len, bo
   out.action = d.action;
   out.target_overlay = d.target_overlay;
   out.reason = d.reason;
+
+  // Observe-only reply-shape check (Task 12, R6: length + leading prefix).
+  // Inbound traffic is never a reply, and with no expectation set nothing is
+  // evaluated — so the counters stay 0 instead of counting noise. The check
+  // never changes the outcome above: the original still flows.
+  if (!inbound &&
+      (cfg_.expected_reply_length.has_value() || !cfg_.expected_reply_prefix.empty())) {
+    ++counters_.reply_shape_checked;
+    if (!ReplyShapeMatches(view.payload_len, packet + view.payload_offset, view.payload_len,
+                           cfg_.expected_reply_length, cfg_.expected_reply_prefix)) {
+      ++counters_.reply_shape_mismatch;
+    }
+  }
 
   switch (d.action) {
     case HostAction::RefuseBroadcast:

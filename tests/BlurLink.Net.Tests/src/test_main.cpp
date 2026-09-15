@@ -23,6 +23,7 @@
 #include "blurlink/host_engine.h"
 #include "blurlink/host_roster.h"
 #include "blurlink/json_min.h"
+#include "blurlink/reply_shape.h"
 #include "blurlink/windivert_abi.h"
 #include "blurlink/packet.h"
 #include "blurlink/rate_limiter.h"
@@ -127,6 +128,20 @@ void TestFilter() {
   cfg.broadcast_str = "255.255.255.255";
   cfg.discovery_port = 0;
   CHECK(!blurlink::BuildFilterString(cfg, f).ok);
+
+  // Task 12: the adapter term is opt-in (default: every interface, a
+  // byte-identical filter) and canonical-numeric-only when set.
+  blurlink::BridgeConfig plain;
+  plain.discovery_port = 12345;
+  plain.broadcast = {255, 255, 255, 255};
+  plain.broadcast_str = "255.255.255.255";
+  CHECK(blurlink::BuildFilterString(plain, f).ok);
+  CHECK(f.find("ifIdx") == std::string::npos);
+  blurlink::BridgeConfig scoped = plain;
+  scoped.adapter_if_index = 22;
+  CHECK(blurlink::BuildFilterString(scoped, f).ok);
+  CHECK(f == "outbound && ip && udp && udp.DstPort == 12345 && ip.DstAddr == "
+            "255.255.255.255 && ifIdx == 22");
 }
 
 void TestTransform() {
@@ -607,6 +622,19 @@ void TestHostFilterString() {
   // the two must never be confused for one another.
   CHECK(blurlink::BuildHostFilterString(blurlink::kHostAnnounceUdpPort, lans, err).empty());
   CHECK(!err.empty());
+
+  // Task 12: the adapter term scopes all three terms, and is absent by default.
+  CHECK(none.find("ifIdx") == std::string::npos);
+  CHECK(f.find("ifIdx") == std::string::npos);
+  err.clear();
+  auto scoped = blurlink::BuildHostFilterString(50001, lans, err, 22);
+  CHECK(err.empty());
+  std::size_t ifidx_hits = 0;
+  for (std::size_t pos = scoped.find("ifIdx == 22"); pos != std::string::npos;
+       pos = scoped.find("ifIdx == 22", pos + 1)) {
+    ++ifidx_hits;
+  }
+  CHECK(ifidx_hits == 3);
 }
 
 static blurlink::AnnouncePacket MkPlayer(const char* overlay, const char* lan,
@@ -845,8 +873,9 @@ void TestHostEngineDispatch() {
   blurlink::HostEngine e(cfg);
 
   std::string err;
-  // With no players, only BlurLink's own introduction port is watched.
-  CHECK(e.FilterString(err) == "(inbound && ip && udp && udp.DstPort == 47811)");
+  // With no players, only BlurLink's own introduction port is watched — scoped
+  // to this engine's adapter (Task 12: adapter_if_index = 7 above).
+  CHECK(e.FilterString(err) == "(inbound && ip && udp && udp.DstPort == 47811 && ifIdx == 7)");
   CHECK(err.empty());
 
   // 1. A valid introduction enters the roster and schedules a rebuild.
@@ -959,7 +988,7 @@ void TestHostEngineFilterRebuildDebounce() {
   CHECK(e.counters().filter_reopens == 2);
   f = e.FilterString(err);
   CHECK(f.find("192.168.1.50") == std::string::npos);
-  CHECK(f == "(inbound && ip && udp && udp.DstPort == 47811)");
+  CHECK(f == "(inbound && ip && udp && udp.DstPort == 47811 && ifIdx == 7)");  // adapter 7, Task 12
   CHECK(e.players().size() == 3);
 }
 
@@ -976,10 +1005,77 @@ void TestHostEngineRevoke() {
   CHECK(!e.Revoke({25, 1, 2, 3}, 200));  // idempotent, not a crash
 
   std::string err;
-  CHECK(e.FilterString(err) == "(inbound && ip && udp && udp.DstPort == 47811)");
+  CHECK(e.FilterString(err) ==
+        "(inbound && ip && udp && udp.DstPort == 47811 && ifIdx == 7)");  // adapter 7, Task 12
   // A revoke is a roster change, so it must settle into one rebuild.
   CHECK(e.Tick(5000));
   CHECK(e.counters().filter_reopens == 1);
+}
+
+// Task 12: the observe-only reply-shape rule (R6), mirroring the managed
+// ReplyShapeValidatorTests. The fixture is synthetic at the real reply length
+// (160 bytes) with a scrubbed 10.0.0.x address — never real capture bytes.
+void TestReplyShape() {
+  std::vector<std::uint8_t> reply(160);
+  for (std::size_t i = 0; i < reply.size(); ++i) {
+    reply[i] = static_cast<std::uint8_t>(0xA0 + (i & 0x0F));
+  }
+  reply[32] = 10;
+  reply[33] = 0;
+  reply[34] = 0;
+  reply[35] = 20;
+
+  const std::optional<int> no_length;
+  const std::vector<std::uint8_t> no_prefix;
+  // Off by default: matches anything.
+  CHECK(blurlink::ReplyShapeMatches(reply.size(), reply.data(), reply.size(), no_length,
+                                    no_prefix));
+  // Length mismatch.
+  const std::optional<int> len_24 = 24;
+  CHECK(!blurlink::ReplyShapeMatches(reply.size(), reply.data(), reply.size(), len_24,
+                                     no_prefix));
+  // Prefix mismatch: one flipped byte in an otherwise identical prefix.
+  std::vector<std::uint8_t> prefix(reply.begin(), reply.begin() + 12);
+  prefix[5] ^= 0xFF;
+  const std::optional<int> len_160 = 160;
+  CHECK(!blurlink::ReplyShapeMatches(reply.size(), reply.data(), reply.size(), len_160,
+                                     prefix));
+  // Short buffer: fewer leading bytes than the prefix needs.
+  std::vector<std::uint8_t> good(reply.begin(), reply.begin() + 12);
+  CHECK(!blurlink::ReplyShapeMatches(reply.size(), reply.data(), 4, len_160, good));
+}
+
+// Task 12: the host engine counts shape outcomes where replies are classified,
+// without ever changing the outcome (observe-only — never a drop).
+void TestHostEngineReplyShape() {
+  blurlink::HostConfig cfg{};
+  cfg.discovery_port = 50001;
+  cfg.adapter_if_index = 7;
+  cfg.expected_reply_length = 2;
+  cfg.expected_reply_prefix = {9, 9};
+  blurlink::HostEngine e(cfg);
+  AddPlayer(e, "25.1.2.3", "192.168.1.50", 51234, 0);
+  CHECK(e.counters().reply_shape_checked == 0);
+
+  // A reply matching the expectation: counted, not a mismatch, still forwarded.
+  auto good = BuildPacket({25, 9, 9, 9}, {192, 168, 1, 50}, 50001, 51234, {9, 9});
+  auto out = e.Dispatch(good.data(), good.size(), /*inbound=*/false, 100);
+  CHECK(out.action == blurlink::HostAction::Forward);
+  CHECK(e.counters().reply_shape_checked == 1);
+  CHECK(e.counters().reply_shape_mismatch == 0);
+
+  // A reply of the wrong shape: STILL forwarded (observe-only), but counted.
+  auto bad = BuildPacket({25, 9, 9, 9}, {192, 168, 1, 50}, 50001, 51234, {9});
+  out = e.Dispatch(bad.data(), bad.size(), /*inbound=*/false, 200);
+  CHECK(out.action == blurlink::HostAction::Forward);
+  CHECK(e.counters().reply_shape_checked == 2);
+  CHECK(e.counters().reply_shape_mismatch == 1);
+
+  // Forwards and announcements are not replies: never evaluated.
+  auto fwd = BuildPacket({192, 168, 1, 50}, {25, 9, 9, 9}, 51234, 50001, {1, 2, 3, 4});
+  out = e.Dispatch(fwd.data(), fwd.size(), /*inbound=*/true, 300);
+  CHECK(out.reason == "forward-heard");
+  CHECK(e.counters().reply_shape_checked == 2);
 }
 
 // The WinDivert ABI numbers we pass into the driver. Nothing else in the suite
@@ -1030,6 +1126,8 @@ int main() {
   TestHostEngineDispatch();
   TestHostEngineFilterRebuildDebounce();
   TestHostEngineRevoke();
+  TestReplyShape();
+  TestHostEngineReplyShape();
   TestFuzzPacket();
   TestFuzzHex();
   TestFuzzJson();

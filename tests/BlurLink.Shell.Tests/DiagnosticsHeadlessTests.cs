@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using BlurLink.Contracts;
+using BlurLink.Core.Session;
 using BlurLink.Shell.ViewModels;
 using BlurLink.Shell.Views;
 using Xunit;
@@ -49,6 +50,49 @@ public sealed class DiagnosticsHeadlessTests
             var result = view.FindControl<TextBlock>("VerifyResult");
             Assert.NotNull(result);
             Assert.Contains("differs", result.Text, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            window.Close();
+            vm.Dispose();
+        }
+    }
+
+    [AvaloniaFact]
+    public void ReplyShapeSection_ShowsObserveOnlyCounts()
+    {
+        // All-zero states hide the section; non-zero states show the counts.
+        var idle = new DiagnosticsViewModel(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+        Assert.False(idle.HasReplyShape);
+        Assert.Empty(idle.Refusals);
+        Assert.Equal("No refusals recorded.", idle.RefusalsStatus);
+        idle.Dispose();
+
+        var join = SessionState.Initial with
+        {
+            Mode = SessionMode.Bridge,
+            Phase = SessionPhase.Running,
+            Counters = SessionCounters.Empty with { ReplyShapeChecked = 5, ReplyShapeMismatch = 1 },
+        };
+        var vm = new DiagnosticsViewModel(
+            Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
+            sessionStates: () => (join, SessionState.Initial));
+        var view = new DiagnosticsView { DataContext = vm };
+        var window = new Window { Content = view };
+        window.Show();
+
+        try
+        {
+            Assert.True(vm.HasReplyShape);
+            var section = view.FindControl<Border>("ReplyShapeSection");
+            Assert.NotNull(section);
+            Assert.True(section.IsVisible);
+            var text = view.FindControl<TextBlock>("ReplyShapeText");
+            Assert.NotNull(text);
+            Assert.Contains("5 checked", text.Text);
+            Assert.Contains("1 mismatched", text.Text);
+            Assert.Contains("never blocked", text.Text);
+            Assert.NotNull(view.FindControl<ItemsControl>("RefusalsList"));
         }
         finally
         {

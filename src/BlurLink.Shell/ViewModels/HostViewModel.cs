@@ -154,6 +154,9 @@ public sealed class HostViewModel : ShellViewModelBase, IDisposable
     /// <summary>User-facing session story, derived from the coordinator state. Replaces the retired FormatStatus sentences.</summary>
     public SessionStory Story => SessionStoryTable.Describe(_coordinator.State);
 
+    /// <summary>Current coordinator snapshot for the Diagnostics sections (Task 12).</summary>
+    public SessionState CoordinatorState => _coordinator.State;
+
     /// <summary>Forwarded coordinator transitions (MainViewModel and Task 11 subscribe).</summary>
     public event Action<SessionState>? StateChanged;
 

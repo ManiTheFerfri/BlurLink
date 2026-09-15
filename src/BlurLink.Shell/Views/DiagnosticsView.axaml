@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:BlurLink.Shell.ViewModels"
+             xmlns:c="using:BlurLink.Shell.Converters"
              x:Class="BlurLink.Shell.Views.DiagnosticsView"
              x:DataType="vm:DiagnosticsViewModel">
   <StackPanel MaxWidth="720">
@@ -79,6 +80,39 @@
         </WrapPanel>
         <TextBlock x:Name="VerifyResult" Text="{Binding Verify.Result}" TextWrapping="Wrap"
                    Margin="0,8,0,0" />
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Reply shape (Task 12, observe-only) ============ -->
+    <Border x:Name="ReplyShapeSection" Classes="card" IsVisible="{Binding HasReplyShape}">
+      <StackPanel>
+        <TextBlock Text="REPLY SHAPE" Classes="label" />
+        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="Observe-only: replies are counted against the verified profile, never blocked." />
+        <TextBlock x:Name="ReplyShapeText" Text="{Binding ReplyShapeText}" TextWrapping="Wrap"
+                   FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Refusals (Task 12) ============ -->
+    <Border Classes="card" IsVisible="{Binding HasSessionStates}">
+      <StackPanel>
+        <TextBlock Text="REFUSALS" Classes="label" />
+        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="Packets the helper saw and chose not to forward — kept, never misdelivered." />
+        <TextBlock Text="{Binding RefusalsStatus}" TextWrapping="Wrap"
+                   FontSize="11" Margin="0,0,0,8" />
+        <ItemsControl x:Name="RefusalsList" ItemsSource="{Binding Refusals}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <!-- The row is a (Text, Count) tuple: its elements are fields, not
+                   bindable properties, so the whole row goes through the converter. -->
+              <TextBlock Text="{Binding Converter={x:Static c:RefusalRowConverter.Instance}}"
+                         TextWrapping="Wrap" FontSize="11.5" FontFamily="{StaticResource MonoFont}"
+                         Margin="0,2,0,2" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
       </StackPanel>
     </Border>
   </StackPanel>

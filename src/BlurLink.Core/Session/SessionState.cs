@@ -26,14 +26,27 @@ public sealed record SessionCounters(
     long HostForwardsHeard,
     long HostRepliesForwarded,
     long HostBroadcastReplies,
-    long HostAmbiguousReplies)
+    long HostAmbiguousReplies,
+    long ReplyShapeChecked,
+    long ReplyShapeMismatch,
+    long FragmentsRejected,
+    long InjectionErrors,
+    long PayloadGateSkipped,
+    long HostUnmatchedReplies,
+    long HostInjectionErrors,
+    long HostAnnounceRejected,
+    long HostCollisions)
 {
-    public static readonly SessionCounters Empty = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    public static readonly SessionCounters Empty = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     public static SessionCounters From(IpcStatusResponse s) => new(
         s.Captured, s.Forwarded, s.Reinjected, s.Dropped, s.DedupSkipped,
         s.AnnouncementsSent, s.HostForwardsHeard, s.HostRepliesForwarded,
-        s.HostBroadcastReplies, s.HostAmbiguousReplies);
+        s.HostBroadcastReplies, s.HostAmbiguousReplies,
+        s.ReplyShapeChecked, s.ReplyShapeMismatch,
+        s.FragmentsRejected, s.InjectionErrors, s.PayloadGateSkipped,
+        s.HostUnmatchedReplies, s.HostInjectionErrors, s.HostAnnounceRejected,
+        s.HostCollisions);
 }
 
 /// <summary>A reason a session cannot run, with the fix the user can act on.</summary>

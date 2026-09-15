@@ -57,6 +57,14 @@ struct BridgeConfig {
   int rate_burst = kDefaultRateBurst;
   int adapter_if_index = 0;
 
+  // Observe-only reply-shape expectation from the verified profile (Task 12,
+  // R6: length + leading prefix). Empty means off. Counted, never enforced:
+  // the bridge diverts outbound queries only, so nothing is ever evaluated
+  // bridge-side; the fields exist so `start` carrying them parses and the
+  // status contract stays uniform across sessions.
+  std::optional<int> expected_reply_length;
+  std::vector<std::uint8_t> expected_reply_prefix;
+
   // Host-mode support: introduce ourselves to the host so it can map our
   // replies back to us. BlurLink's own introduction packet (see announce.h),
   // never a Blur protocol constant, and never a payload inspection.

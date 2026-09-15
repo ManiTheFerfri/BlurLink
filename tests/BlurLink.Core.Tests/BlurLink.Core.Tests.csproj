@@ -27,4 +27,13 @@
     <ProjectReference Include="..\..\src\BlurLink.Platform\BlurLink.Platform.csproj" />
   </ItemGroup>
 
+  <!-- Task 12: RefusalExplainerTests (in Core.Tests per the test-split ruling) needs the
+       SHIPPING RefusalExplainer source, but this project cannot reference BlurLink.Shell:
+       Shell and Desktop share AssemblyName "BlurLink", so referencing both breaks the
+       build (Desktop types vanish). The explainer is dependency-free, so the test
+       compiles the real file in — edits to the Shell source track the test. -->
+  <ItemGroup>
+    <Compile Include="..\..\src\BlurLink.Shell\ViewModels\RefusalExplainer.cs" />
+  </ItemGroup>
+
 </Project>
