@@ -483,6 +483,7 @@ public sealed class HostViewModel : ShellViewModelBase, IDisposable
 
             HostRunning = false;
             Players.Clear();
+            Raise(nameof(ShowNoPlayers));
             StatusText = "Host mode stopped.";
             _status(StatusText);
         }

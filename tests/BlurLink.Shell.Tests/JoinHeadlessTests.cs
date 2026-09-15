@@ -132,36 +132,52 @@ public sealed class JoinHeadlessTests
     {
         // The watcher marshals through the ambient context when there is one;
         // null it so the exit lands inline and the test cannot deadlock.
+        var prior = SynchronizationContext.Current;
         SynchronizationContext.SetSynchronizationContext(null);
-        using var vm = ForBridge();
-        var session = vm.Session;
-        session.BridgeRunning = true;
-        session.StopWhenBlurExits = true;
+        try
+        {
+            using var vm = ForBridge();
+            var session = vm.Session;
+            session.BridgeRunning = true;
+            session.StopWhenBlurExits = true;
 
-        using var sleeper = StartExitingProcess(42);
-        session.WatchProcessForTests(sleeper);
+            using var sleeper = StartExitingProcess(42);
+            session.WatchProcessForTests(sleeper);
 
-        Assert.True(await WaitForAsync(() => !session.BridgeRunning, TimeSpan.FromSeconds(20)));
-        Assert.Equal("Bridge stopped — helper exited cleanly. No interception remains.", session.Message);
+            Assert.True(await WaitForAsync(() => !session.BridgeRunning, TimeSpan.FromSeconds(20)));
+            Assert.Equal("Bridge stopped — helper exited cleanly. No interception remains.", session.Message);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(prior);
+        }
     }
 
     [Fact]
     public async Task BlurExit_KeepsBridge_WhenOptedOut()
     {
+        var prior = SynchronizationContext.Current;
         SynchronizationContext.SetSynchronizationContext(null);
-        using var vm = ForBridge();
-        var session = vm.Session;
-        session.BridgeRunning = true;
-        session.StopWhenBlurExits = false;
+        try
+        {
+            using var vm = ForBridge();
+            var session = vm.Session;
+            session.BridgeRunning = true;
+            session.StopWhenBlurExits = false;
 
-        using var sleeper = StartExitingProcess(42);
-        session.WatchProcessForTests(sleeper);
+            using var sleeper = StartExitingProcess(42);
+            session.WatchProcessForTests(sleeper);
 
-        Assert.True(await WaitForAsync(
-            () => session.Message.Contains("(code 42)", StringComparison.Ordinal),
-            TimeSpan.FromSeconds(20)));
-        Assert.True(session.BridgeRunning);
-        Assert.StartsWith("Blur exited", session.Message, StringComparison.Ordinal);
+            Assert.True(await WaitForAsync(
+                () => session.Message.Contains("(code 42)", StringComparison.Ordinal),
+                TimeSpan.FromSeconds(20)));
+            Assert.True(session.BridgeRunning);
+            Assert.StartsWith("Blur exited", session.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(prior);
+        }
     }
 
     private static Process StartExitingProcess(int code)
