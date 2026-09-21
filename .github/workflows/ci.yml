@@ -30,7 +30,12 @@ jobs:
       - name: Configure helper
         run: cmake -S src/BlurLink.Net -B out/native -DCMAKE_BUILD_TYPE=Release
       - name: Build helper (MSVC x64)
-        run: cmake --build out/native --config Release
+        run: cmake --build out/native --config Release 2>&1 | Tee-Object -FilePath out/native-build.log; exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-build-log
+          path: out/native-build.log
       - name: Live interop vs MSVC helper (no admin/driver needed)
         run: pwsh scripts/test-interop.ps1 -HelperExe out/native/Release/blurlink-net.exe -WatchdogSec 4
       - name: Configure native tests

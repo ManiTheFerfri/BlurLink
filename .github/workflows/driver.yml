@@ -41,7 +41,12 @@ jobs:
       - name: Build the helper (MSVC x64)
         run: |
           cmake -S src/BlurLink.Net -B out/native -DCMAKE_BUILD_TYPE=Release
-          cmake --build out/native --config Release
+          cmake --build out/native --config Release 2>&1 | Tee-Object -FilePath out/driver-build.log; exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: driver-build-log
+          path: out/driver-build.log
       - name: Build the injector
         run: |
           cmake -S tools/hostsim -B out/hostsim -DCMAKE_BUILD_TYPE=Release
