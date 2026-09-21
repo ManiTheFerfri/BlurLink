@@ -14,6 +14,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+      issues: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -28,6 +29,14 @@ jobs:
         with:
           name: release-build-log
           path: out/release-build.log
+      - name: File build log as issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tail = Get-Content out/release-build.log -Tail 120 -ErrorAction SilentlyContinue
+          if (-not $tail) { $tail = '(no build log captured)' }
+          ($tail -join "`n") | gh issue create --title "CI build failure: release helper ($env:GITHUB_SHA)" --body-file -
       - name: Package
         shell: pwsh
         run: |

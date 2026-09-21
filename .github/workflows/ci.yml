@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   pull_request:
 
+permissions:
+  issues: write
+
 jobs:
   managed:
     runs-on: windows-latest
@@ -36,6 +39,14 @@ jobs:
         with:
           name: native-build-log
           path: out/native-build.log
+      - name: File build log as issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tail = Get-Content out/native-build.log -Tail 120 -ErrorAction SilentlyContinue
+          if (-not $tail) { $tail = '(no build log captured)' }
+          ($tail -join "`n") | gh issue create --title "CI build failure: native helper ($env:GITHUB_SHA)" --body-file -
       - name: Live interop vs MSVC helper (no admin/driver needed)
         run: pwsh scripts/test-interop.ps1 -HelperExe out/native/Release/blurlink-net.exe -WatchdogSec 4
       - name: Configure native tests
