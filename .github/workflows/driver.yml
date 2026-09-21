@@ -67,6 +67,24 @@ jobs:
         with:
           name: driver-injector-log
           path: out/driver-injector.log
+      - name: Stage WinDivert 2.2.2 x64 (hash-verified)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Join-Path $env:TEMP 'WinDivert-2.2.2-A.zip'
+          Invoke-WebRequest -Uri 'https://reqrypt.org/download/WinDivert-2.2.2-A.zip' -OutFile $zip
+          $tmp = Join-Path $env:TEMP 'windivert-stage'
+          if (Test-Path $tmp) { Remove-Item -Recurse -Force $tmp }
+          Expand-Archive -LiteralPath $zip -DestinationPath $tmp
+          $dll = Join-Path $tmp 'WinDivert-2.2.2-A/x64/WinDivert.dll'
+          $sys = Join-Path $tmp 'WinDivert-2.2.2-A/x64/WinDivert64.sys'
+          $dllHash = (Get-FileHash -Algorithm SHA256 $dll).Hash
+          if ($dllHash -ne 'C1E060EE19444A259B2162F8AF0F3FE8C4428A1C6F694DCE20DE194AC8D7D9A2') { throw "WinDivert.dll SHA256 mismatch: $dllHash" }
+          $sysHash = (Get-FileHash -Algorithm SHA256 $sys).Hash
+          if ($sysHash -ne '8DA085332782708D8767BCACE5327A6EC7283C17CFB85E40B03CD2323A90DDC2') { throw "WinDivert64.sys SHA256 mismatch: $sysHash" }
+          New-Item -ItemType Directory -Force -Path 'third-party/WinDivert/x64' | Out-Null
+          Copy-Item -Force $dll, $sys 'third-party/WinDivert/x64/'
+          Get-ChildItem -Force 'third-party/WinDivert/x64/'
       - name: Run the elevated harness
         id: harness
         shell: pwsh
