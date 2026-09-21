@@ -59,7 +59,7 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
         _ => Join,
     };
 
-    private string _statusBar = "Research mode — enter verified discovery parameters.";
+    private string _statusBar = "Ready — discovery port 50001 (fixed).";
     public string StatusBar { get => _statusBar; set => Set(ref _statusBar, value); }
 
     private string _trayToolTip = "BlurLink — idle";

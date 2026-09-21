@@ -86,7 +86,7 @@ public sealed class SettingsViewModel : ShellViewModelBase
             var version = typeof(SettingsViewModel).Assembly
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                 ?? typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3)
-                ?? "0.2.0";
+                ?? "0.3.0";
             var plus = version.IndexOf('+');
             if (plus >= 0)
             {
