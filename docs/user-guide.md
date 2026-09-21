@@ -10,41 +10,17 @@ IP (e.g. host `100.96.47.177`, joiner `100.96.21.89`).
 2. Open Blur, create a LAN lobby, and share the overlay IP with the joiner.
 3. On first lobby creation, allow Blur through Windows Firewall when asked
    (otherwise the joiner's discovery can't reach the game).
-4. If your friends are on a *different* physical network from you, also run
-   **Host mode** — see below. Without it BlurLink's work is all on the joiner,
-   and that is not enough across a genuinely remote overlay.
+4. If your friends are on a *different* physical network from you, you may
+   rarely need **Host mode** — see Advanced below. Without it BlurLink's
+   work is all on the joiner, and that is not enough across a genuinely
+   remote overlay.
 
-## Host mode (for the host)
-
-Run this on the machine **whose Blur lobby the others join**, when the
-players are on different physical networks.
-
-1. Blur is running with its LAN lobby open. Go to the **Host** tab, select
-   your overlay adapter (the one your friends reach you on), press
-   **Start Host Mode**, and approve the UAC prompt.
-2. **Look at "forwards heard" first.** Each friend who starts their bridge
-   sends you a small introduction, and their discovery forward should show up
-   as a heard packet. **If it stays 0, their traffic is not reaching you at
-   all** — Host mode cannot help from there and the problem is on the join
-   side. See `docs/troubleshooting.md` step 3.
-3. Players appear in the list as they announce themselves. Nothing needs to be
-   typed for them. Acceptance is automatic so nobody has to wait on you, but
-   every entry has a **Revoke** button.
-4. Each player's own replies are copied to *their* overlay address. Your own
-   LAN is untouched — the original reply is always left in place, so players
-   sitting next to you keep working exactly as before.
-
-Things worth knowing:
-
-- **Host or join, not both.** Starting Host mode stops a bridge or a sniff,
-  and starting one of those stops Host mode. One session at a time.
-- A silent player is dropped from the filter after about 45 seconds. If one
-  player's Blur stops listing the lobby, that is usually why — have them
-  refresh Blur's LAN list.
-- Broadcast replies (`x.x.x.255`) are **refused and counted**, not forwarded.
-  That is deliberate: until a real capture verifies the packet shape,
-  guessing there could break the very lobby you are fixing. If those refusals
-  climb, that is useful evidence — record it for a future profile.
+## Advanced (rarely needed): Host mode
+Only for reply-dies-at-host: a helper host shows `forwards heard > 0` but nothing arrives on the joiner (strict NAT / mobile / university WiFi / `.255` edges).
+Host mode runs on the lobby host and sends a copy of each reply to each joiner's overlay address, leaving the host's own LAN untouched.
+Default flows never need it — this pair routes back without host mode, so the Join tab is the whole normal path.
+The engine stays compiled and tested with zero idle cost; only the nav button is hidden.
+See `docs/troubleshooting.md` ("Captured/forwarded but no lobby") for the fallback branch.
 
 ## Join
 

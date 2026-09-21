@@ -50,10 +50,9 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
     private string _currentView = "Join";
     public string CurrentView { get => _currentView; set => Set(ref _currentView, value); }
 
-    /// <summary>The child matching <see cref="CurrentView"/> (Join, Host, Settings or Diagnostics).</summary>
+    /// <summary>The child matching <see cref="CurrentView"/> (Join, Settings or Diagnostics; Host stays constructed for tests but is unreachable from nav).</summary>
     public object? CurrentPane => CurrentView switch
     {
-        "Host" => Host,
         "Settings" => Settings,
         "Diagnostics" => Diagnostics,
         "Join" => Join,

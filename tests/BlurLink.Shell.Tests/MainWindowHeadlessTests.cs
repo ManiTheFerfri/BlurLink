@@ -25,11 +25,11 @@ public sealed class MainWindowHeadlessTests
     }
 
     [AvaloniaFact]
-    public void Navigation_ReachesAllFourDestinations()
+    public void Navigation_ReachesAllThreeDestinations()
     {
         using var app = TestShellApp.Create();
 
-        foreach (var view in new[] { "Join", "Host", "Settings", "Diagnostics" })
+        foreach (var view in new[] { "Join", "Settings", "Diagnostics" })
         {
             app.Main.Navigate(view);
             Assert.Equal(view, app.Vm.CurrentView);
