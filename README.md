@@ -48,6 +48,7 @@ lives in `docs/packet-research.md`. The chase is over: the port is **50001, fixe
    Avalonia + Skia natives + embedded helper/driver):
    `dist/BlurLink/BlurLink.exe`. It needs the
    [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe).
+    The same installer is attached to each GitHub release next to the app zip.
 2. The helper (`blurlink-net.exe`) and the WinDivert runtime ride inside the exe
    and are staged to `%LocalAppData%\BlurLink\bin\` on first bridge start —
    no manual driver setup (see `third-party/WinDivert/README.md`).
