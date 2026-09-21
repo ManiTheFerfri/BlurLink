@@ -304,13 +304,13 @@ std::vector<std::uint8_t> BuildUdpIPv4(const Addr& src, const Addr& dst, std::ui
 bool ResolveIfIndex(const Addr& dst, const std::string& dst_text, std::uint32_t& out,
                     std::string& reason) {
   (void)dst;
-  const IPAddr dest = inet_addr(dst_text.c_str());
-  if (dest == INADDR_NONE) {
+  IN_ADDR in4{};
+  if (InetPtonA(AF_INET, dst_text.c_str(), &in4) != 1) {
     reason = "GetBestInterface: could not parse '" + dst_text + "'";
     return false;
   }
   DWORD index = 0;
-  const DWORD rc = GetBestInterface(dest, &index);
+  const DWORD rc = GetBestInterface(in4.S_un.S_addr, &index);
   if (rc != NO_ERROR) {
     reason = "GetBestInterface failed for " + dst_text + " (code " + std::to_string(rc) + ")";
     return false;
