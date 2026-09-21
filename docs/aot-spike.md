@@ -128,3 +128,7 @@ claimed for them.)
 - Nothing else changed: no project file was touched (the script gained an
   additive `-Project` parameter; `build-portable.ps1` and the default
   deliverable are exactly as before).
+
+## D12 verdict (M4 release cut, 2026-09-21)
+
+NativeAOT failed on both shells — WPF refused at the SDK gate (`NETSDK1168`: WPF + trimming unsupported; verbatim log in §"Verbatim WPF baseline run") and the Avalonia Shell failed publish on 16 `IL2026`/`IL3050` errors from reflection-based `System.Text.Json` in `BlurLink.Core` (`Config/GameProfileStore.cs`, `Config/BlurLinkConfigStore.cs`, `Session/SessionCoordinator.cs`; verbatim log in §"Verbatim Avalonia (Shell) run") — so the "AOT delivers" condition in spec D12 is false and the legacy no-runtime flavors `-Full`/`-Sfx` are RETAINED at the 0.3.0 cut (the `JsonSerializerContext` source-generation fix is parked as future work and never gated this release). **Spec Q7 closed: no AOT retry at 0.3.0; `-Full`/`-Sfx` stay.**
