@@ -28,10 +28,10 @@ See `docs/troubleshooting.md` ("Captured/forwarded but no lobby") for the fallba
 2. Enter the host's overlay IPv4 (strict IPv4, e.g. `100.96.47.177`).
 3. Select *your* overlay adapter.
 4. The discovery port is fixed at 50001 (verified by capture + live
-   lobby) — it is already filled in. Only if you cleared it, restore
-   50001; Advanced manual entry can still override it, but the default
-   flow never needs it. (Broadcast destination and optional signature
-   can still be entered manually.)
+   lobby) — shown as "Discovery port 50001 (fixed)". Broadcast is fixed
+   at 255.255.255.255 and the payload prefix stays empty, so there is
+   nothing to type. Advanced manual entry (config import) can still
+   override these values, but the default flow never needs it.
 5. Keep **Preserve physical LAN broadcast** enabled unless you know why not.
 6. Press **Start Bridge** → approve the UAC prompt (helper only). Starting
    the bridge also starts watching for the host's answer automatically —
@@ -56,9 +56,11 @@ See `docs/troubleshooting.md` ("Captured/forwarded but no lobby") for the fallba
 
 ## Limitations (v1)
 
-- Discovery port fixed at 50001 (verified); Research mode survives only
-  as Advanced manual entry for overrides.
-- One broadcast destination per run; IPv4 only.
+- Discovery port fixed at 50001 (verified), broadcast fixed at
+  255.255.255.255, payload prefix always empty. Advanced manual entry
+  (config import) can still override them, but the default Join flow
+  never needs it.
+- IPv4 only.
 - If the lobby lists but joining fails, the host reply may embed a
   physical LAN IP — documented in troubleshooting; no auto-fix in v1.
 

@@ -30,6 +30,29 @@ public sealed class DiagnosticsHeadlessTests
         }
     }
 
+    [AvaloniaFact]
+    public void RemovedVerifySection_StaysOutOfTheView()
+    {
+        // Task D null-assert: the Verify-profile section left the
+        // Diagnostics VIEW in Task C (VerifyProfileViewModel stays compiled
+        // + tested, unbound), so the removed VerifyResult name must stay
+        // absent from the rendered view.
+        var vm = new DiagnosticsViewModel(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+        var view = new DiagnosticsView { DataContext = vm };
+        var window = new Window { Content = view };
+        window.Show();
+
+        try
+        {
+            Assert.Null(view.FindControl<TextBlock>("VerifyResult"));
+        }
+        finally
+        {
+            window.Close();
+            vm.Dispose();
+        }
+    }
+
     [Fact]
     public void DisagreeingSamples_SetTheRefusalReason()
     {
