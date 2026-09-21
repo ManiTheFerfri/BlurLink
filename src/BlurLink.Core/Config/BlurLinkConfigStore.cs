@@ -89,6 +89,7 @@ public sealed class BlurLinkConfigStore
         cfg.PayloadPrefixHex ??= string.Empty;
         cfg.HostOverlayIp ??= string.Empty;
         cfg.BlurExePath ??= string.Empty;
+        if (cfg.DiscoveryUdpPort is null or 0) cfg.DiscoveryUdpPort = BlurLinkConstants.DiscoveryUdpPortDefault;
         cfg.VerifiedProfileName ??= string.Empty; cfg.VerifiedProfileDate ??= string.Empty; cfg.HostIpByProfile ??= new();
         // Unknown/empty levels map to the default, so an imported or hand-edited
         // settings.json can never leave the logger and the UI disagreeing.

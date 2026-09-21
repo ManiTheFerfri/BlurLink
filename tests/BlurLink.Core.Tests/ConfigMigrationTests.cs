@@ -7,12 +7,15 @@ namespace BlurLink.Core.Tests;
 public sealed class ConfigMigrationTests
 {
     [Fact]
-    public void MissingFile_YieldsResearchDefaults()
+    public void MissingFile_YieldsFixedDiscoveryPort()
     {
+        // Task A: the research-mode null default retired by evidence
+        // (2026-09-12 capture + 2026-09-15 live lobby) — fresh configs pin 50001.
         var store = new BlurLinkConfigStore();
         var cfg = store.Load(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "settings.json"));
 
-        Assert.Null(cfg.DiscoveryUdpPort); // Research mode: unknown
+        Assert.Equal(BlurLinkConstants.DiscoveryUdpPortDefault, cfg.DiscoveryUdpPort);
+        Assert.Equal(50001, cfg.DiscoveryUdpPort);
         Assert.Equal("255.255.255.255", cfg.BroadcastDestination);
         Assert.True(cfg.PreserveOriginalBroadcast);
         Assert.Equal(BlurLinkConstants.DefaultRateLimitPerSecond, cfg.RateLimitPerSecond);
@@ -29,6 +32,22 @@ public sealed class ConfigMigrationTests
         Assert.True(cfg.PreserveOriginalBroadcast);
         Assert.Equal("join", cfg.LastMode);
         Assert.Equal(BlurLinkConstants.DefaultRateLimitPerSecond, cfg.RateLimitPerSecond);
+        // Task A: legacy files without a port migrate to the fixed default.
+        Assert.Equal(BlurLinkConstants.DiscoveryUdpPortDefault, cfg.DiscoveryUdpPort);
+    }
+
+    [Fact]
+    public void NullOrZeroPort_MigratesToFixedDefault_WhileExplicitOverrideSurvives()
+    {
+        // Task A: old files with null/0 land on 50001; an Advanced manual
+        // override (nonzero) is never clobbered by migration.
+        Assert.Equal(50001, BlurLinkConstants.DiscoveryUdpPortDefault);
+        var fromNull = BlurLinkConfigStore.ImportJson("""{"hostOverlayIp":"100.96.47.177","discoveryUdpPort":null}""");
+        Assert.Equal(50001, fromNull.DiscoveryUdpPort);
+        var fromZero = BlurLinkConfigStore.ImportJson("""{"hostOverlayIp":"100.96.47.177","discoveryUdpPort":0}""");
+        Assert.Equal(50001, fromZero.DiscoveryUdpPort);
+        var explicitOverride = BlurLinkConfigStore.ImportJson("""{"discoveryUdpPort":60001}""");
+        Assert.Equal(60001, explicitOverride.DiscoveryUdpPort);
     }
 
     [Fact]

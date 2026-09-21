@@ -89,11 +89,14 @@ public sealed class LoopPreventionTests
     }
 
     [Fact]
-    public void Profile_DefaultsToResearchMode()
+    public void Profile_ResearchModeKeepsNameButDefaultsToFixedPort()
     {
+        // Task A: the name stays for compat, but the null port retired —
+        // ResearchMode() now carries the verified fixed port.
         var p = GameProfile.ResearchMode();
         Assert.Equal("Research mode", p.ProfileName);
-        Assert.Null(p.DiscoveryUdpPort);
+        Assert.Equal(BlurLinkConstants.DiscoveryUdpPortDefault, p.DiscoveryUdpPort);
+        Assert.Equal(50001, p.DiscoveryUdpPort);
     }
 }
 

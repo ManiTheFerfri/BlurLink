@@ -24,9 +24,11 @@ public sealed class BlurLinkConfig
     [JsonPropertyName("hostOverlayIp")]
     public string HostOverlayIp { get; set; } = string.Empty;
 
-    /// <summary>Null = Research mode (unknown yet).</summary>
+    /// <summary>Discovery port. Fixed at <see cref="BlurLinkConstants.DiscoveryUdpPortDefault"/>
+    /// by evidence; Advanced manual entry may still override it. Kept nullable
+    /// for JSON compat with older settings files (Migrate fills null/0).</summary>
     [JsonPropertyName("discoveryUdpPort")]
-    public int? DiscoveryUdpPort { get; set; }
+    public int? DiscoveryUdpPort { get; set; } = BlurLinkConstants.DiscoveryUdpPortDefault;
 
     [JsonPropertyName("broadcastDestination")]
     public string BroadcastDestination { get; set; } = "255.255.255.255";

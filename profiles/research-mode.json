@@ -1,7 +1,7 @@
 {
   "profileName": "Research mode",
-  "discoveryUdpPort": null,
+  "discoveryUdpPort": 50001,
   "broadcastDestination": "255.255.255.255",
   "payloadPrefixHex": "",
-  "notes": "Fill these from an authorized local Wireshark capture. See docs/packet-research.md. Do not invent a Blur UDP port, magic bytes, or payload layout."
+  "notes": "Discovery port is fixed at 50001, verified by the 2026-09-12 real query/answer capture plus the 2026-09-15 live lobby (join-only). Kept for history; new installs default to 50001 and Advanced manual entry may still override it."
 }

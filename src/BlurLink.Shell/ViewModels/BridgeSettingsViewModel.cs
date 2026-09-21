@@ -162,7 +162,7 @@ public sealed class BridgeSettingsViewModel : ShellViewModelBase
         _capabilitiesChanged = capabilitiesChanged;
 
         _hostIp = config.HostOverlayIp;
-        _discoveryPort = config.DiscoveryUdpPort?.ToString() ?? string.Empty;
+        _discoveryPort = config.DiscoveryUdpPort?.ToString() ?? BlurLinkConstants.DiscoveryUdpPortDefault.ToString();
         _broadcastDestination = string.IsNullOrWhiteSpace(config.BroadcastDestination) ? "255.255.255.255" : config.BroadcastDestination;
         _payloadHex = config.PayloadPrefixHex;
         _preserveBroadcast = config.PreserveOriginalBroadcast;
@@ -287,7 +287,7 @@ public sealed class BridgeSettingsViewModel : ShellViewModelBase
         try
         {
             HostIp = _config.HostOverlayIp ?? string.Empty;
-            DiscoveryPort = _config.DiscoveryUdpPort?.ToString() ?? string.Empty;
+            DiscoveryPort = _config.DiscoveryUdpPort?.ToString() ?? BlurLinkConstants.DiscoveryUdpPortDefault.ToString();
             BroadcastDestination = string.IsNullOrWhiteSpace(_config.BroadcastDestination)
                 ? "255.255.255.255"
                 : _config.BroadcastDestination;

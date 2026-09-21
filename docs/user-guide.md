@@ -51,10 +51,11 @@ Things worth knowing:
 1. Open BlurLink → **Join**.
 2. Enter the host's overlay IPv4 (strict IPv4, e.g. `100.96.47.177`).
 3. Select *your* overlay adapter.
-4. Don't know the discovery port? Advanced → **Detect discovery port**,
-   then refresh Blur's LAN list while it listens for 15s. Press
-   **Use port N** when it finds Blur's broadcast. (Or enter a verified
-   port manually, plus broadcast destination and optional signature.)
+4. The discovery port is fixed at 50001 (verified by capture + live
+   lobby) — it is already filled in. Only if you cleared it, restore
+   50001; Advanced manual entry can still override it, but the default
+   flow never needs it. (Broadcast destination and optional signature
+   can still be entered manually.)
 5. Keep **Preserve physical LAN broadcast** enabled unless you know why not.
 6. Press **Start Bridge** → approve the UAC prompt (helper only). Starting
    the bridge also starts watching for the host's answer automatically —
@@ -79,7 +80,8 @@ Things worth knowing:
 
 ## Limitations (v1)
 
-- Research mode until *you* verify the discovery port/signature.
+- Discovery port fixed at 50001 (verified); Research mode survives only
+  as Advanced manual entry for overrides.
 - One broadcast destination per run; IPv4 only.
 - If the lobby lists but joining fails, the host reply may embed a
   physical LAN IP — documented in troubleshooting; no auto-fix in v1.

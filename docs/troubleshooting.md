@@ -18,9 +18,10 @@
 
 ## No captured discovery packets (`captured=0`)
 
-- Did you enter the verified discovery port? Use Join → Advanced →
-  **Detect discovery port** while refreshing Blur's LAN list instead of
-  guessing — Research mode (empty port) refuses to start.
+- The discovery port is fixed at 50001 and prefilled — if you cleared
+  it, restore 50001 (Advanced manual entry can override, but the default
+  flow uses the fixed verified port). An empty or wrong port refuses to
+  start by design.
 - Is Blur actually broadcasting? Refresh its LAN list while watching the
   counters. Wrong broadcast destination (global vs directed vs multicast)
   also yields zero.
@@ -49,7 +50,8 @@ Decide where it dies, in order:
 2. **Is the host lobby open and allowed?** Host: LAN lobby actually open
    in Blur; Windows Firewall allowed Blur (check on first launch).
 3. **Does anything answer?** Join → Advanced → **Listen for replies**
-   (needs the bridge running + the discovery port set), then refresh
+   (needs the bridge running; the discovery port defaults to the fixed
+   50001), then refresh
    Blur's LAN list:
    - *Replies from your host IP arrive* but no lobby → Blur ignored the
      answer (likely an embedded LAN IP — capture evidence, see below).
@@ -93,7 +95,7 @@ Decide where it dies, in order:
 ## Manual test checklist (integration)
 
 1. Two PCs, same physical LAN, host + join works with BlurLink disabled.
-2. Capture the discovery port; configure Research mode → verified profile.
+2. Discovery port is fixed at 50001 (verified); write a verified profile if none exists.
 3. Join bridge on; LAN refresh produces `forwarded` ticks.
 4. Host receives discovery; lobby becomes visible.
 5. Join works if the response embeds no non-routable LAN IP.

@@ -88,7 +88,12 @@ public sealed class VerifyProfileViewModel : ShellViewModelBase
             return;
         }
 
-        if (_config.DiscoveryUdpPort is not int port || port is < 1 or > 65535)
+        // Null/0 predates the fixed-port default: prefill from the default so
+        // old configs still write. Wrong (out-of-range) values are still refused.
+        var port = _config.DiscoveryUdpPort is null or 0
+            ? BlurLinkConstants.DiscoveryUdpPortDefault
+            : _config.DiscoveryUdpPort.Value;
+        if (port is < 1 or > 65535)
         {
             Result = "Set the verified discovery port on the Join tab first, then write the profile.";
             return;

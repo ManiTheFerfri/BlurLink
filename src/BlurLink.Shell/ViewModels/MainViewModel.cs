@@ -41,10 +41,10 @@ public sealed class MainViewModel : ShellViewModelBase, IDisposable
     /// <summary>Guided first run over live state (Task 8). Null-never after construction.</summary>
     public FirstRunViewModel FirstRun { get; }
 
-    /// <summary>True once: no verified profile yet, still Research mode, not dismissed.</summary>
+    /// <summary>True once: no verified profile yet, not dismissed. (The discovery
+    /// port no longer gates this: it is fixed at 50001 by evidence.)</summary>
     public bool ShowFirstRun
         => string.IsNullOrWhiteSpace(Config.VerifiedProfileDate)
-            && Config.DiscoveryUdpPort is null
             && !Config.FirstRunDismissed;
 
     private string _currentView = "Join";

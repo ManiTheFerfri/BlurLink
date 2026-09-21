@@ -126,8 +126,11 @@ public sealed class SettingsImportResetTests
     }
 
     [Fact]
-    public void Reset_ClearsResearchValuesInConfigAndOnTheJoinTab()
+    public void Reset_RestoresFixedPortAndClearsOtherResearchValues()
     {
+        // Task A (renamed from Reset_ClearsResearchValuesInConfigAndOnTheJoinTab):
+        // Reset restores the fixed 50001 default instead of an empty port, while
+        // host IP / payload hex are still cleared.
         var config = BlurLinkConfig.CreateDefault();
         config.HostOverlayIp = "100.96.47.177";
         config.DiscoveryUdpPort = 50001;
@@ -140,10 +143,10 @@ public sealed class SettingsImportResetTests
             settings.ResetCommand.Execute(null);
 
             Assert.Equal(string.Empty, join.HostIp);
-            Assert.Equal(string.Empty, join.DiscoveryPort);
+            Assert.Equal("50001", join.DiscoveryPort);
             Assert.Equal(string.Empty, join.PayloadHex);
             Assert.Equal(string.Empty, config.HostOverlayIp);
-            Assert.Null(config.DiscoveryUdpPort);
+            Assert.Equal(50001, config.DiscoveryUdpPort);
             Assert.Equal(string.Empty, config.PayloadPrefixHex);
         }
         finally

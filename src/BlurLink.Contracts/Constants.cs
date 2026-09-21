@@ -1,6 +1,7 @@
 // Central constants shared by the GUI and the native helper.
-// No Blur protocol constants live here: ports/signatures are user-supplied
-// research values, never hardcoded game facts.
+// Blur's discovery port (50001) is hardcoded here by evidence (see
+// DiscoveryUdpPortDefault); nothing else about Blur's protocol is a fact
+// here — remaining ports/signatures stay user-supplied research values.
 namespace BlurLink.Contracts;
 
 public static class BlurLinkConstants
@@ -49,6 +50,11 @@ public static class BlurLinkConstants
 
     /// <summary>Level used when a stored/imported value is missing or unknown.</summary>
     public const string DefaultLogLevel = "Information";
+
+    /// <summary>Discovery port, verified by capture (2026-09-12 real query/answer)
+    // + live lobby (2026-09-15, join-only). Hardcoded by evidence; override lives
+    // only in Advanced manual entry, never in the default flow.</summary>
+    public const int DiscoveryUdpPortDefault = 50001;
 
     /// <summary>
     /// UDP port BlurLink's own host-introduction packets are sent to. This is

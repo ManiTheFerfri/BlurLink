@@ -73,7 +73,9 @@ public sealed class FirstRunViewModel : ShellViewModelBase
         var overlayOk = _settings.SelectedAdapter is not null
             && !string.IsNullOrWhiteSpace(_settings.HostIp)
             && _settings.RouteWarning == string.Empty;
-        var portOk = int.TryParse(_settings.DiscoveryPort?.Trim(), out int port) && port is >= 1 and <= 65535;
+        // The discovery port is fixed at 50001 by evidence: this step is
+        // display-only and always done (Advanced manual entry may still
+        // override the port, but the default flow never needs it).
         var preflightOk = _settings.PreflightReady;
         var written = !string.IsNullOrWhiteSpace(_config.VerifiedProfileDate);
 
@@ -99,9 +101,9 @@ public sealed class FirstRunViewModel : ShellViewModelBase
                 "Join"),
             new FirstRunStep(
                 "Verify the discovery port",
-                portOk ? $"Discovery port {port}." : "Enter the verified discovery port (1–65535).",
+                "Discovery port is fixed at 50001 (verified).",
                 "Open Join",
-                portOk,
+                true,
                 "Join"),
             new FirstRunStep(
                 "Pre-flight",

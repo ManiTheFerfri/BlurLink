@@ -33,10 +33,12 @@ public sealed class FirstRunTests
     [Fact]
     public void Writer_Refuses_AnUnverifiedProfile()
     {
+        // Task A: ResearchMode() now carries the fixed port, so it writes
+        // fine — refusal needs an explicitly unknown (null) port.
         var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         Assert.Throws<ArgumentException>(() =>
-            VerifiedProfileWriter.Write(GameProfile.ResearchMode(), dir));
+            VerifiedProfileWriter.Write(new GameProfile { DiscoveryUdpPort = null }, dir));
     }
 
     [Fact]

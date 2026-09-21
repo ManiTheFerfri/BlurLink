@@ -208,7 +208,7 @@ public sealed class HostViewModel : ShellViewModelBase, IDisposable
 
         _suppressConfigWrite = true;
         _autoAccept = config.HostAutoAccept;
-        _discoveryPort = config.DiscoveryUdpPort?.ToString() ?? string.Empty;
+        _discoveryPort = config.DiscoveryUdpPort?.ToString() ?? BlurLinkConstants.DiscoveryUdpPortDefault.ToString();
         _suppressConfigWrite = false;
 
         RefreshAdaptersCommand = new RelayCommand(_ => RefreshAdapters());
@@ -318,7 +318,7 @@ public sealed class HostViewModel : ShellViewModelBase, IDisposable
         try
         {
             _autoAccept = _config.HostAutoAccept;
-            _discoveryPort = _config.DiscoveryUdpPort?.ToString() ?? string.Empty;
+            _discoveryPort = _config.DiscoveryUdpPort?.ToString() ?? BlurLinkConstants.DiscoveryUdpPortDefault.ToString();
             var ifIndex = _config.SelectedAdapterIfIndex;
             _selectedAdapter = Adapters.FirstOrDefault(a => a.IfIndex == ifIndex);
         }

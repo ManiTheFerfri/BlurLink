@@ -32,6 +32,12 @@
       "value": "1",
       "inCode": "src/BlurLink.Contracts/Constants.cs",
       "mustAppearIn": []
+    },
+    {
+      "name": "discovery port",
+      "value": "50001",
+      "inCode": "src/BlurLink.Contracts/Constants.cs",
+      "mustAppearIn": ["docs/user-guide.md"]
     }
   ]
 }
