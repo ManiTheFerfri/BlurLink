@@ -61,7 +61,12 @@ jobs:
       - name: Build the injector
         run: |
           cmake -S tools/hostsim -B out/hostsim -DCMAKE_BUILD_TYPE=Release
-          cmake --build out/hostsim --config Release
+          cmake --build out/hostsim --config Release 2>&1 | Tee-Object -FilePath out/driver-injector.log; exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: driver-injector-log
+          path: out/driver-injector.log
       - name: Run the elevated harness
         id: harness
         shell: pwsh
@@ -89,3 +94,16 @@ jobs:
         with:
           name: driver-run-log
           path: out/driver-run.log
+      - name: File driver job logs as issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $b = Get-Content out/driver-build.log -Tail 60 -ErrorAction SilentlyContinue
+          if (-not $b) { $b = '(no build log captured)' }
+          $i = Get-Content out/driver-injector.log -Tail 60 -ErrorAction SilentlyContinue
+          if (-not $i) { $i = '(no injector log captured)' }
+          $r = Get-Content out/driver-run.log -Tail 30 -ErrorAction SilentlyContinue
+          if (-not $r) { $r = '(no run log captured)' }
+          $body = @('== driver-build.log (last 60) ==') + $b + @('', '== driver-injector.log (last 60) ==') + $i + @('', '== driver-run.log (last 30) ==') + $r
+          ($body -join "`n") | gh issue create --title "CI build failure: driver job ($env:GITHUB_SHA)" --body-file -
