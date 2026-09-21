@@ -20,7 +20,7 @@ lives in `docs/packet-research.md`. The chase is over: the port is **50001, fixe
   (`50001 -> 50001`, host endpoints embedded) captured from a live game.
   2026-09-15: a real lobby listed and joined on that port. Empty or wrong
   ports refuse to start by design.
-- **Driver-level suites green.** Managed: **309/309** (Core 278 + Shell 31,
+- **Driver-level suites green.** Managed: **300/300** (Core 234 + Shell 66,
   0 failed — verified by `dotnet test BlurLink.sln -c Release` on this commit).
   The WinDivert driver path was exercised for real, elevated, on 2026-09-12:
   the bridge filter matched live injected traffic, and the host-mode composite
