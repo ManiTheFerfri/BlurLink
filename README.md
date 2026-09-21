@@ -44,7 +44,9 @@ lives in `docs/packet-research.md`. The chase is over: the port is **50001, fixe
 
 ## Install
 
-1. Take the slim exe: `dist/BlurLink/BlurLink.exe` (~3.5 MB). It needs the
+1. Take the slim exe (framework-dependent single file, ~32 MB at 0.3.0 —
+   Avalonia + Skia natives + embedded helper/driver):
+   `dist/BlurLink/BlurLink.exe`. It needs the
    [.NET 10 Desktop Runtime](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe).
 2. The helper (`blurlink-net.exe`) and the WinDivert runtime ride inside the exe
    and are staged to `%LocalAppData%\BlurLink\bin\` on first bridge start —
@@ -75,7 +77,7 @@ the main UI hides it. Default flows never need it — see `docs/user-guide.md`
 
 | Flavor | Size | Needs | Cold start |
 | ------ | ---- | ----- | ---------- |
-| Slim (the deliverable) | ~3.5 MB | .NET 10 Desktop Runtime | instant |
+| Slim (the deliverable) | ~32 MB (app + Skia natives + embedded helper/driver) | .NET 10 Desktop Runtime | instant |
 | Full, legacy (`-Full`) | ~140 MB | nothing | instant |
 | SFX, legacy (`-Full -Sfx`) | ~43 MB | nothing | +~2s extract, one prompt |
 

@@ -1,4 +1,5 @@
 using BlurLink.Core.Logging;
+using BlurLink.Platform;
 using Xunit;
 
 namespace BlurLink.Core.Tests;
@@ -138,5 +139,18 @@ public sealed class LogTailTests : IDisposable
         var withLines = LogTail.FormatForDiagnostics(@"C:\logs\helper.log", new[] { "l1", "l2" });
         Assert.Contains("l1", withLines);
         Assert.EndsWith("l2" + Environment.NewLine, withLines);
+    }
+}
+
+/// <summary>Helper log path: pure Platform contract, no view-model needed.</summary>
+public sealed class HelperLogPathTests
+{
+    [Fact]
+    public void DefaultHelperLogPath_IsUnderLocalAppData()
+    {
+        var expected = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "BlurLink", "logs", "helper.log");
+        Assert.Equal(expected, HelperLauncher.DefaultHelperLogPath());
     }
 }

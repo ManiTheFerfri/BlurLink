@@ -6,7 +6,8 @@
   %LocalAppData%\BlurLink\bin on first launch).
 .DESCRIPTION
   PROJECT DECISION (2026-09-09): slim-only. Default output is the
-  framework-dependent single exe (~3.5 MB, needs .NET 10 Desktop Runtime).
+  framework-dependent single exe (~32 MB at 0.3.0: Avalonia + Skia natives +
+  embedded helper/driver; needs .NET 10 Desktop Runtime).
   -Full keeps the legacy self-contained build (~140 MB); -Sfx wraps it.
   1. Ensures official WinDivert 2.2.2 x64 files (downloads them if missing).
   2. Links blurlink-net.exe (MinGW g++ or MSVC via CMake).
