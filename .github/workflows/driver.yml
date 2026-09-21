@@ -74,7 +74,7 @@ jobs:
           $exe = 'out/native/Release/blurlink-net.exe'
           $sim = 'out/hostsim/Release/hostsim.exe'
           try {
-            scripts/test-e2e.ps1 -HelperExe $exe -SimExe $sim 2>&1 |
+            scripts/test-e2e.ps1 -HelperExe $exe -SimExe $sim *>&1 |
               Tee-Object -FilePath out/driver-run.log
             "harness-exit=$LASTEXITCODE" | Out-File -Append out/driver-run.log
           } catch {
@@ -83,6 +83,7 @@ jobs:
           }
           Get-Content out/driver-run.log | Select-Object -Last 40
       - name: Record the verdict
+        if: always()
         shell: pwsh
         run: |
           $log = Get-Content -Raw out/driver-run.log -ErrorAction SilentlyContinue
