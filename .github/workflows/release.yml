@@ -22,7 +22,12 @@ jobs:
       - name: Build the helper
         run: |
           cmake -S src/BlurLink.Net -B out/native -DCMAKE_BUILD_TYPE=Release
-          cmake --build out/native --config Release
+          cmake --build out/native --config Release 2>&1 | Tee-Object -FilePath out/release-build.log; exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-build-log
+          path: out/release-build.log
       - name: Package
         shell: pwsh
         run: |
