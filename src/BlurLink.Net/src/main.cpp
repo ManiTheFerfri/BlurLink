@@ -181,13 +181,14 @@ std::string StatusJson(const blurlink::Bridge& bridge, const blurlink::Sniffer& 
   // mutually exclusive and each Start resets its own counters, so exactly one
   // side is ever live: report the live side when one runs, else the last-known
   // maximum, so a stopped session's counts stay visible instead of vanishing.
+  // Parenthesized: <windows.h> defines a function-like max macro that would otherwise expand here (C2589 under MSVC).
   const auto shape_checked = bridge.active()    ? c.reply_shape_checked
                                : host.active()  ? hc.reply_shape_checked
-                                                : std::max(c.reply_shape_checked,
+                                                : (std::max)(c.reply_shape_checked,
                                                            hc.reply_shape_checked);
   const auto shape_mismatch = bridge.active()   ? c.reply_shape_mismatch
                                 : host.active() ? hc.reply_shape_mismatch
-                                                : std::max(c.reply_shape_mismatch,
+                                                : (std::max)(c.reply_shape_mismatch,
                                                            hc.reply_shape_mismatch);
   std::ostringstream os;
   os << "{\"type\":\"status\",\"active\":" << (bridge.active() ? "true" : "false")
