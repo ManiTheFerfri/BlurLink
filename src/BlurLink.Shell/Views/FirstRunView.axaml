@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BlurLink.Shell.ViewModels"
+             xmlns:conv="using:BlurLink.Shell.Converters"
+             x:Class="BlurLink.Shell.Views.FirstRunView"
+             x:DataType="vm:FirstRunViewModel">
+  <StackPanel MaxWidth="640" Spacing="10">
+    <TextBlock Text="Welcome to BlurLink" Classes="h1" Margin="0,4,0,0" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+      <TextBlock Text="Status:" Classes="faint" VerticalAlignment="Center" />
+      <TextBlock x:Name="VerifiedBadge" Text="{Binding VerifiedBadge}" FontWeight="SemiBold" VerticalAlignment="Center" />
+    </StackPanel>
+    <TextBlock Classes="faint" TextWrapping="Wrap"
+               Text="Four steps to your first bridge. The discovery port is fixed at 50001 (verified) — nothing to set up there. Prefer to explore first? Skip — details live on the Join tab." />
+
+    <Border Classes="card">
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Steps[0].Title}" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding Steps[0].Detail}" Classes="faint" TextWrapping="Wrap" />
+        <Button Content="{Binding Steps[0].ActionLabel}" Command="{Binding LocateCommand}"
+                AutomationProperties.Name="Locate Blur" />
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card">
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Steps[1].Title}" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding Steps[1].Detail}" Classes="faint" TextWrapping="Wrap" />
+        <Button Content="{Binding Steps[1].ActionLabel}" Command="{Binding OpenJoinCommand}"
+                AutomationProperties.Name="Choose overlay" />
+      </StackPanel>
+    </Border>
+
+    <!-- Fixed-display auto-done step (Task C): no action button renders;
+         the port needs nothing from the user. -->
+    <Border Classes="card">
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Steps[2].Title}" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding Steps[2].Detail}" Classes="faint" TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card">
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Steps[3].Title}" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding Steps[3].Detail}" Classes="faint" TextWrapping="Wrap" />
+        <Button Content="{Binding Steps[3].ActionLabel}" Command="{Binding WriteProfileCommand}"
+                AutomationProperties.Name="Write verified profile" />
+      </StackPanel>
+    </Border>
+
+    <TextBlock Text="{Binding Notice}" Classes="faint" TextWrapping="Wrap"
+               IsVisible="{Binding Notice, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+
+    <Button Content="Skip" Command="{Binding SkipCommand}" Classes="quiet"
+            AutomationProperties.Name="Skip first run" HorizontalAlignment="Right" />
+  </StackPanel>
+</UserControl>

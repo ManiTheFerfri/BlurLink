@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  managed:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore
+        run: dotnet restore BlurLink.sln
+      - name: Vulnerable packages
+        run: dotnet list BlurLink.sln package --vulnerable --include-transitive
+        continue-on-error: true
+      - name: Build
+        run: dotnet build BlurLink.sln -c Release --no-restore --nologo
+      - name: Test
+        run: dotnet test BlurLink.sln -c Release --no-build --nologo
+
+  native:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure helper
+        run: cmake -S src/BlurLink.Net -B out/native -DCMAKE_BUILD_TYPE=Release
+      - name: Build helper (MSVC x64)
+        run: cmake --build out/native --config Release
+      - name: Live interop vs MSVC helper (no admin/driver needed)
+        run: pwsh scripts/test-interop.ps1 -HelperExe out/native/Release/blurlink-net.exe -WatchdogSec 4
+      - name: Configure native tests
+        run: cmake -S tests/BlurLink.Net.Tests -B out/native-tests -DCMAKE_BUILD_TYPE=Release
+      - name: Build + run native tests
+        run: |
+          cmake --build out/native-tests --config Release
+          ctest --test-dir out/native-tests --output-on-failure
+
+  docs:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Privacy and claim checks
+        shell: pwsh
+        run: |
+          scripts/check-docs-privacy.ps1
+          scripts/check-doc-claims.ps1
+
+  ui:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Headless UI tests
+        run: dotnet test tests/BlurLink.Shell.Tests -c Release --nologo --filter "FullyQualifiedName~HeadlessTests|FullyQualifiedName~Headless"

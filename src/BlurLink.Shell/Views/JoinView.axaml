@@ -1,0 +1,164 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BlurLink.Shell.ViewModels"
+             xmlns:net="using:BlurLink.Core.Net"
+             xmlns:conv="using:BlurLink.Shell.Converters"
+             x:Class="BlurLink.Shell.Views.JoinView"
+             x:DataType="vm:JoinViewModel">
+  <StackPanel MaxWidth="720">
+    <TextBlock Text="Join a friend's lobby" Classes="h1" Margin="0,4,0,6" />
+    <TextBlock Classes="faint" Margin="0,0,0,8"
+               Text="Enter your friend's overlay IP, start the bridge, then open Blur's LAN list." />
+    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+      <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center" Fill="{StaticResource Success}" />
+      <TextBlock Text="Verified 50001" FontWeight="SemiBold" Foreground="{StaticResource Success}" VerticalAlignment="Center" />
+      <TextBlock Classes="faint" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center"
+                 Text="Discovery port fixed by evidence (capture + live lobby)." />
+    </StackPanel>
+
+    <!-- ============ Connect card ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="CONNECTION" Classes="label" />
+        <Grid ColumnDefinitions="*,14,*">
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="Host overlay IP" Classes="label" />
+            <TextBox Text="{Binding Settings.HostIp}" MaxLength="15"
+                     AutomationProperties.Name="Host overlay IP"
+                     FontFamily="{StaticResource MonoFont}" FontSize="15" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="Your overlay adapter" Classes="label" />
+            <ComboBox ItemsSource="{Binding Settings.Adapters}" SelectedItem="{Binding Settings.SelectedAdapter}"
+                      AutomationProperties.Name="Your overlay adapter">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="net:AdapterInfo">
+                  <TextBlock Text="{Binding FriendlyName}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+              <ComboBox.SelectionBoxItemTemplate>
+                <DataTemplate x:DataType="net:AdapterInfo">
+                  <TextBlock Text="{Binding FriendlyName}" />
+                </DataTemplate>
+              </ComboBox.SelectionBoxItemTemplate>
+            </ComboBox>
+          </StackPanel>
+        </Grid>
+
+        <!-- Pre-flight checklist -->
+        <Border Margin="0,12,0,0" Padding="14,12" CornerRadius="12"
+                Background="{StaticResource Sidebar}" BorderBrush="{StaticResource Border}" BorderThickness="1">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <Grid Width="9" Height="9" Margin="0,0,9,0" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{StaticResource Muted}" />
+                <Ellipse Width="9" Height="9" Fill="{StaticResource Success}"
+                         IsVisible="{Binding Session.BridgeRunning}" />
+                <Ellipse Width="9" Height="9" Fill="{StaticResource Success}"
+                         IsVisible="{Binding Settings.PreflightReady}" />
+              </Grid>
+              <TextBlock Text="{Binding Settings.PreflightSummary}" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding Settings.PreflightItems}" Margin="18,8,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:PreflightItem">
+                  <StackPanel Orientation="Horizontal" Margin="0,2.5">
+                    <TextBlock Text="✓" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,7,0"
+                               Foreground="{StaticResource Success}" IsVisible="{Binding Ok}" />
+                    <TextBlock Text="○" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,7,0"
+                               Foreground="{StaticResource Faint}" IsVisible="{Binding !Ok}" />
+                    <TextBlock Text="{Binding Label}" FontSize="12" VerticalAlignment="Center" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <TextBlock Text="{Binding Settings.RouteWarning}" Foreground="{StaticResource Danger}"
+                   FontSize="12" Margin="0,10,0,0"
+                   IsVisible="{Binding Settings.RouteWarning, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+
+        <StackPanel Margin="0,14,0,0">
+          <Button x:Name="StartStopButton" Content="Start Bridge" Command="{Binding Session.StartStopCommand}"
+                  Classes="primary" Padding="30,12" FontSize="14"
+                  AutomationProperties.Name="Start Bridge"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  IsVisible="{Binding Session.ShowStart}" />
+          <Button Content="Stop Bridge" Command="{Binding Session.StartStopCommand}"
+                  Classes="danger" Padding="30,12" FontSize="14"
+                  AutomationProperties.Name="Stop Bridge"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  IsVisible="{Binding Session.BridgeRunning}" />
+          <WrapPanel Margin="0,12,0,0">
+            <Button Content="Force kill" Command="{Binding Session.ForceKillCommand}"
+                    Classes="danger"
+                    AutomationProperties.Name="Force kill"
+                    IsVisible="{Binding Session.ShowForceKill}" />
+            <Button Content="Launch Blur" Command="{Binding Session.LaunchBlurCommand}"
+                    AutomationProperties.Name="Launch Blur" />
+          </WrapPanel>
+        </StackPanel>
+
+        <TextBlock Text="{Binding Session.Message}" Foreground="{StaticResource Accent}" Margin="0,10,0,0"
+                   IsVisible="{Binding Session.Message, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+        <TextBlock Text="{Binding Session.BlurStatus}" Classes="faint"
+                   FontSize="12" Margin="0,2,0,0"
+                   IsVisible="{Binding Session.BlurStatus, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+        <TextBlock Text="{Binding Sniff.RepliesSummary}" Foreground="{StaticResource Success}"
+                   FontSize="12" Margin="0,2,0,0"
+                   IsVisible="{Binding Sniff.RepliesSummary, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+        <TextBlock x:Name="StoryHeadline" Text="{Binding Session.Story.Headline}" FontWeight="SemiBold" Margin="0,8,0,0" />
+        <TextBlock Text="{Binding Session.Story.Detail}" TextWrapping="Wrap" Margin="0,2,0,0" />
+        <TextBlock Text="{Binding Session.Story.SuggestedAction}" TextWrapping="Wrap" Opacity="0.8" Margin="0,2,0,0"
+                   IsVisible="{Binding Session.Story.SuggestedAction, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Advanced card ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="ADVANCED" Classes="label" />
+
+        <!-- Fixed discovery values (Task C): the port and broadcast are fixed
+             by evidence. The VMs keep the editable properties compiled and
+             headless-tested (config import can still carry them), but the
+             view no longer edits them and the sniff section is unbound. -->
+        <Grid ColumnDefinitions="*,14,*">
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="Discovery UDP port" Classes="label" />
+            <TextBlock Text="Discovery port 50001 (fixed)" FontFamily="{StaticResource MonoFont}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="Broadcast destination" Classes="label" />
+            <TextBlock Text="255.255.255.255 (fixed)" FontFamily="{StaticResource MonoFont}" />
+          </StackPanel>
+        </Grid>
+        <CheckBox Content="Keep physical LAN working (recommended)" IsChecked="{Binding Settings.PreserveBroadcast}"
+                  AutomationProperties.Name="Keep physical LAN working"
+                  Margin="0,14,0,0" />
+        <CheckBox Content="Stop bridge when Blur exits" IsChecked="{Binding Session.StopWhenBlurExits}"
+                  AutomationProperties.Name="Stop bridge when Blur exits"
+                  Margin="0,2" />
+
+        <TextBlock Text="Route details" Classes="label" Margin="1,14,0,7" />
+        <TextBlock Text="{Binding Settings.RouteDetails, Mode=OneWay}"
+                   FontFamily="{StaticResource MonoFont}" FontSize="11.5" TextWrapping="Wrap" />
+        <Expander Header="Counters" Margin="0,8,0,0">
+          <TextBlock Text="{Binding Session.RawCounters}" FontFamily="{StaticResource MonoFont}" />
+        </Expander>
+
+        <TextBlock Text="Active filter" Classes="label" Margin="1,14,0,7" />
+        <TextBox Text="{Binding Session.ActiveFilter, Mode=OneWay}" IsReadOnly="True"
+                 AutomationProperties.Name="Active filter"
+                 FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+        <TextBlock Text="Recent packets (metadata only)" Classes="label" Margin="1,10,0,7" />
+        <ListBox ItemsSource="{Binding Session.RecentEvents}" Height="130"
+                 FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+        <Button Content="Refresh adapters" Command="{Binding Settings.RefreshAdaptersCommand}"
+                Classes="quiet" HorizontalAlignment="Left" Margin="0,12,0,0"
+                AutomationProperties.Name="Refresh adapters" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

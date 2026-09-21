@@ -1,0 +1,69 @@
+# .NET / C# artifacts
+bin/
+obj/
+out/
+publish/
+TestResults/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Native builds
+/build/
+/build-native/
+*.o
+*.obj
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.tlog
+*.lastbuildstate
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+
+# WinDivert driver binaries are NOT committed (license + arch specific).
+# Place them under third-party/WinDivert/x64/ locally; see third-party/WinDivert/README.md.
+third-party/WinDivert/x64/
+third-party/WinDivert/x86/
+third-party/WinDivert/aarch64/
+
+# Staged helper binary for portable embedding (built, never committed).
+src/BlurLink.Shell/Native/
+
+# Packaging output
+/dist/
+*.msi
+*.msix
+*.zip
+
+# Local dev settings (per-user app config lives in %LocalAppData%, not here)
+appsettings.local.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# V2 foundation reconcile (Task 1): plan-listed entries missing from the above.
+# Existing lines above are kept as-is; these broaden or add coverage.
+# Unanchored build-output dirs (existing /dist/ and /build/ only cover root).
+dist/
+build/
+
+# Native per-user project state
+*.vcxproj.user
+
+# Test and run artifacts (captures can contain real traffic excerpts)
+*.cap
+*.log
+
+# Editor noise
+.vscode/

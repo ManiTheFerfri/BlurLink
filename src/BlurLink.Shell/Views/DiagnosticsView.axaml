@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BlurLink.Shell.ViewModels"
+             xmlns:c="using:BlurLink.Shell.Converters"
+             x:Class="BlurLink.Shell.Views.DiagnosticsView"
+             x:DataType="vm:DiagnosticsViewModel">
+  <StackPanel MaxWidth="720">
+    <TextBlock Text="Diagnostics" Classes="h1" Margin="0,4,0,6" />
+    <TextBlock Classes="faint" Margin="0,0,0,20" TextWrapping="Wrap"
+               Text="Console output of blurlink-net.exe — what the bridge saw and did. Metadata only; never packet contents." />
+
+    <!-- ============ Helper log ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="HELPER LOG" Classes="label" />
+        <DockPanel LastChildFill="True" Margin="0,0,0,10">
+          <CheckBox DockPanel.Dock="Right" Content="Auto-refresh" IsChecked="{Binding AutoRefreshHelperLog}"
+                    AutomationProperties.Name="Auto-refresh helper log"
+                    VerticalAlignment="Center" />
+          <WrapPanel>
+            <Button Content="Refresh now" Command="{Binding RefreshHelperLogCommand}"
+                    AutomationProperties.Name="Refresh helper log now" />
+            <Button x:Name="CopyLogButton" Content="Copy log" Command="{Binding CopyHelperLogCommand}"
+                    AutomationProperties.Name="Copy helper log" />
+          </WrapPanel>
+        </DockPanel>
+        <ListBox ItemsSource="{Binding HelperLogLines}" Height="180"
+                 FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+        <TextBlock Text="{Binding HelperLogStatus}" Classes="faint"
+                   FontSize="11" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Support bundle (Task 10) ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="SUPPORT BUNDLE" Classes="label" />
+        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="One click: app logs plus diagnostics metadata, zipped. Logs only — a stray capture in the logs folder can never enter a bundle." />
+        <WrapPanel>
+          <Button Content="Create support bundle" Command="{Binding BundleCommand}"
+                  AutomationProperties.Name="Create support bundle" />
+        </WrapPanel>
+        <TextBlock Text="{Binding BundleResult}" TextWrapping="Wrap"
+                   FontSize="11" Margin="0,8,0,0" />
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Crash log (Task 10) ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="CRASH LOG" Classes="label" />
+        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="Newest local crash capture (last 20 lines). Metadata only; never packet contents." />
+        <TextBlock Text="{Binding CrashTail}" TextWrapping="Wrap"
+                   FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+      </StackPanel>
+    </Border>
+
+    <!-- Verify-profile section removed from the VIEW (Task C): the rule
+         (Core PrefixStability), the writer, and VerifyProfileViewModel stay
+         compiled and tested — only the bound section below left the view. -->
+
+    <!-- ============ Reply shape (Task 12, observe-only) ============ -->
+    <Border x:Name="ReplyShapeSection" Classes="card" IsVisible="{Binding HasReplyShape}">
+      <StackPanel>
+        <TextBlock Text="REPLY SHAPE" Classes="label" />
+        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="Observe-only: replies are counted against the verified profile, never blocked." />
+        <TextBlock x:Name="ReplyShapeText" Text="{Binding ReplyShapeText}" TextWrapping="Wrap"
+                   FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Refusals (Task 12) ============ -->
+    <Border Classes="card" IsVisible="{Binding HasSessionStates}">
+      <StackPanel>
+        <TextBlock Text="REFUSALS" Classes="label" />
+        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Text="Packets the helper saw and chose not to forward — kept, never misdelivered." />
+        <TextBlock Text="{Binding RefusalsStatus}" TextWrapping="Wrap"
+                   FontSize="11" Margin="0,0,0,8" />
+        <ItemsControl x:Name="RefusalsList" ItemsSource="{Binding Refusals}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <!-- The row is a (Text, Count) tuple: its elements are fields, not
+                   bindable properties, so the whole row goes through the converter. -->
+              <TextBlock Text="{Binding Converter={x:Static c:RefusalRowConverter.Instance}}"
+                         TextWrapping="Wrap" FontSize="11.5" FontFamily="{StaticResource MonoFont}"
+                         Margin="0,2,0,2" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

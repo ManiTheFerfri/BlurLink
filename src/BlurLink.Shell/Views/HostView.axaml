@@ -1,0 +1,121 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BlurLink.Shell.ViewModels"
+             xmlns:net="using:BlurLink.Core.Net"
+             xmlns:conv="using:BlurLink.Shell.Converters"
+             x:Class="BlurLink.Shell.Views.HostView"
+             x:DataType="vm:HostViewModel">
+  <StackPanel MaxWidth="720">
+    <TextBlock Text="Host a lobby" Classes="h1" Margin="0,4,0,6" />
+    <TextBlock Classes="faint" Margin="0,0,0,20" TextWrapping="Wrap"
+               Text="Your friends' Blur sends discovery to your LAN address, which they cannot route over the overlay — so your reply never reaches them. Host mode watches for their introductions and forwards your Blur's replies to each friend's overlay address. Your own LAN keeps working exactly as it does now." />
+
+    <!-- ============ Setup card ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="SETUP" Classes="label" />
+        <Grid ColumnDefinitions="*,14,*">
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="Your overlay adapter" Classes="label" />
+            <ComboBox ItemsSource="{Binding Adapters}" SelectedItem="{Binding SelectedAdapter}"
+                      AutomationProperties.Name="Your overlay adapter">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="net:AdapterInfo">
+                  <TextBlock Text="{Binding FriendlyName}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+              <ComboBox.SelectionBoxItemTemplate>
+                <DataTemplate x:DataType="net:AdapterInfo">
+                  <TextBlock Text="{Binding FriendlyName}" />
+                </DataTemplate>
+              </ComboBox.SelectionBoxItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="Discovery UDP port" Classes="label" />
+            <TextBox Text="{Binding DiscoveryPort}" MaxLength="5"
+                     AutomationProperties.Name="Discovery UDP port"
+                     FontFamily="{StaticResource MonoFont}" />
+          </StackPanel>
+        </Grid>
+
+        <CheckBox Content="Accept players automatically on this overlay network"
+                  IsChecked="{Binding AutoAccept}" Margin="0,14,0,0"
+                  AutomationProperties.Name="Accept players automatically on this overlay network" />
+        <TextBlock Classes="faint" FontSize="11.5" Margin="0,8,0,0" TextWrapping="Wrap"
+                   Text="With this on, anyone else on the same overlay network can be sent copies of your Blur's discovery replies — never your general traffic. Players are always listed below and can be revoked at any time." />
+
+        <TextBlock Text="{Binding Preflight}" Classes="faint"
+                   Margin="0,12,0,0" TextWrapping="Wrap" />
+
+        <WrapPanel Margin="0,16,0,0">
+          <Button Content="Start host mode" Command="{Binding StartHostCommand}"
+                  Classes="primary" Padding="30,12" FontSize="14"
+                  AutomationProperties.Name="Start host mode"
+                  IsVisible="{Binding ShowStartHost}" />
+          <Button Content="Stop host mode" Command="{Binding StopHostCommand}"
+                  Classes="danger" Padding="30,12" FontSize="14"
+                  AutomationProperties.Name="Stop host mode"
+                  IsVisible="{Binding HostRunning}" />
+          <Button Content="Refresh adapters" Command="{Binding RefreshAdaptersCommand}"
+                  Classes="quiet"
+                  AutomationProperties.Name="Refresh adapters" />
+        </WrapPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Status card ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="STATUS" Classes="label" />
+        <TextBlock x:Name="HostStoryHeadline" Text="{Binding Story.Headline}" FontWeight="SemiBold" Margin="0,4,0,0" />
+        <TextBlock Text="{Binding Story.Detail}" TextWrapping="Wrap" Margin="0,2,0,0" />
+        <TextBlock Text="{Binding Story.SuggestedAction}" TextWrapping="Wrap" Opacity="0.8" Margin="0,2,0,0"
+                   IsVisible="{Binding Story.SuggestedAction, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
+        <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Margin="0,10,0,10" />
+        <TextBlock Text="{Binding Counters}" Classes="mono" FontSize="11"
+                   Foreground="{StaticResource Faint}" />
+        <TextBlock Text="Active filter" Classes="label" Margin="1,14,0,7" />
+        <TextBox Text="{Binding ActiveFilter, Mode=OneWay}" IsReadOnly="True"
+                 AutomationProperties.Name="Active filter"
+                 FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+        <TextBlock Classes="faint" FontSize="11" Margin="0,10,0,0" TextWrapping="Wrap"
+                   Text="The filter is rebuilt whenever a player joins or leaves, which leaves a very brief gap where a reply can be missed — refreshing Blur's LAN list recovers it." />
+      </StackPanel>
+    </Border>
+
+    <!-- ============ Players card ============ -->
+    <Border Classes="card">
+      <StackPanel>
+        <TextBlock Text="PLAYERS" Classes="label" />
+        <TextBlock Classes="faint" FontSize="11.5" Margin="0,6,0,0" TextWrapping="Wrap"
+                   Text="No players yet. A friend appears here as soon as their bridge starts and introduces itself."
+                   IsVisible="{Binding ShowNoPlayers}" />
+        <ItemsControl x:Name="PlayerList" ItemsSource="{Binding Players}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:HostPlayerRow">
+              <Grid Margin="0,8,0,0" ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Summary}" FontFamily="{StaticResource MonoFont}" FontSize="11.5" />
+                  <TextBlock Classes="faint" FontSize="10.5" Margin="0,2,0,0">
+                    <Run Text="{Binding State, Mode=OneWay}" />
+                    <Run Text=" · heard " />
+                    <Run Text="{Binding ForwardsHeard, Mode=OneWay}" />
+                    <Run Text=" · forwarded " />
+                    <Run Text="{Binding RepliesForwarded, Mode=OneWay}" />
+                  </TextBlock>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Revoke"
+                        x:CompileBindings="False"
+                        Command="{Binding $parent[UserControl].DataContext.RevokePlayerCommand}"
+                        CommandParameter="{Binding}"
+                        AutomationProperties.Name="Revoke player"
+                        Classes="danger" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

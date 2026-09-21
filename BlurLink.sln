@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlurLink.Contracts", "src\BlurLink.Contracts\BlurLink.Contracts.csproj", "{A1B2C3D4-1111-4000-8000-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlurLink.Core", "src\BlurLink.Core\BlurLink.Core.csproj", "{A1B2C3D4-2222-4000-8000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlurLink.Core.Tests", "tests\BlurLink.Core.Tests\BlurLink.Core.Tests.csproj", "{A1B2C3D4-4444-4000-8000-000000000004}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlurLink.Shell", "src\BlurLink.Shell\BlurLink.Shell.csproj", "{A1B2C3D4-5555-4000-8000-000000000005}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlurLink.Shell.Tests", "tests\BlurLink.Shell.Tests\BlurLink.Shell.Tests.csproj", "{A1B2C3D4-6666-4000-8000-000000000006}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1B2C3D4-1111-4000-8000-000000000001}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-1111-4000-8000-000000000001}.Debug|x64.Build.0 = Debug|Any CPU
+		{A1B2C3D4-1111-4000-8000-000000000001}.Release|x64.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-1111-4000-8000-000000000001}.Release|x64.Build.0 = Release|Any CPU
+		{A1B2C3D4-2222-4000-8000-000000000002}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-2222-4000-8000-000000000002}.Debug|x64.Build.0 = Debug|Any CPU
+		{A1B2C3D4-2222-4000-8000-000000000002}.Release|x64.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-2222-4000-8000-000000000002}.Release|x64.Build.0 = Release|Any CPU
+		{A1B2C3D4-4444-4000-8000-000000000004}.Debug|x64.ActiveCfg = Debug|x64
+		{A1B2C3D4-4444-4000-8000-000000000004}.Debug|x64.Build.0 = Debug|x64
+		{A1B2C3D4-4444-4000-8000-000000000004}.Release|x64.ActiveCfg = Release|x64
+		{A1B2C3D4-4444-4000-8000-000000000004}.Release|x64.Build.0 = Release|x64
+		{A1B2C3D4-5555-4000-8000-000000000005}.Debug|x64.ActiveCfg = Debug|x64
+		{A1B2C3D4-5555-4000-8000-000000000005}.Debug|x64.Build.0 = Debug|x64
+		{A1B2C3D4-5555-4000-8000-000000000005}.Release|x64.ActiveCfg = Release|x64
+		{A1B2C3D4-5555-4000-8000-000000000005}.Release|x64.Build.0 = Release|x64
+		{A1B2C3D4-6666-4000-8000-000000000006}.Debug|x64.ActiveCfg = Debug|x64
+		{A1B2C3D4-6666-4000-8000-000000000006}.Debug|x64.Build.0 = Debug|x64
+		{A1B2C3D4-6666-4000-8000-000000000006}.Release|x64.ActiveCfg = Release|x64
+		{A1B2C3D4-6666-4000-8000-000000000006}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B10B10B1-0000-4000-8000-B10B10B10B10}
+	EndGlobalSection
+EndGlobal

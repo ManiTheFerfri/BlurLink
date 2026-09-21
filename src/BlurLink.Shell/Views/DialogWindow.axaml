@@ -1,0 +1,12 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="BlurLink.Shell.Views.DialogWindow"
+        Title="BlurLink" Width="440" SizeToContent="Height" MinHeight="160"
+        WindowStartupLocation="CenterOwner" Icon="/Assets/app.ico"
+        CanResize="False">
+  <StackPanel Margin="24" Spacing="16">
+    <TextBlock x:Name="MessageBlock" TextWrapping="Wrap" FontSize="13" />
+    <Button Content="OK" Classes="primary" HorizontalAlignment="Right" MinWidth="96"
+            Click="OnOk" AutomationProperties.Name="OK" />
+  </StackPanel>
+</Window>
