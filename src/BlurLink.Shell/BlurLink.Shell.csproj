@@ -37,4 +37,13 @@
     <InternalsVisibleTo Include="BlurLink.Shell.Tests" />
   </ItemGroup>
 
+  <!-- Portable single-exe: embed staged bridge files if present.
+       Staged by scripts/build-portable.ps1 into Native/ (git-ignored).
+       Dev builds without them keep working via side-by-side files. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Native\blurlink-net.exe" Condition="Exists('Native\blurlink-net.exe')" />
+    <EmbeddedResource Include="Native\WinDivert.dll" Condition="Exists('Native\WinDivert.dll')" />
+    <EmbeddedResource Include="Native\WinDivert64.sys" Condition="Exists('Native\WinDivert64.sys')" />
+  </ItemGroup>
+
 </Project>

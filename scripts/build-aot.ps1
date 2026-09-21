@@ -8,7 +8,7 @@
 [CmdletBinding()]
 param(
   [string]$Configuration = 'Release',
-  [string]$Project = 'src/BlurLink.Desktop'
+  [string]$Project = 'src/BlurLink.Shell'
 )
 
 $ErrorActionPreference = 'Stop'

@@ -36,7 +36,7 @@ third-party/WinDivert/x86/
 third-party/WinDivert/aarch64/
 
 # Staged helper binary for portable embedding (built, never committed).
-src/BlurLink.Desktop/Native/
+src/BlurLink.Shell/Native/
 
 # Packaging output
 /dist/

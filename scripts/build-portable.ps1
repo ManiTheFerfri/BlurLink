@@ -27,7 +27,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$nativeDir = Join-Path $root 'src/BlurLink.Desktop/Native'
+$nativeDir = Join-Path $root 'src/BlurLink.Shell/Native'
 $wdDir = Join-Path $root 'third-party/WinDivert/x64'
 
 Write-Host '==> WinDivert runtime (official 2.2.2 x64)' -ForegroundColor Cyan
@@ -90,16 +90,16 @@ Write-Host '==> publish portable single exe' -ForegroundColor Cyan
 $pub = Join-Path $root 'out/publish-portable'
 if (Test-Path $pub) { Remove-Item -Recurse -Force $pub }
 if ($Full) {
-  & dotnet publish (Join-Path $root 'src/BlurLink.Desktop/BlurLink.Desktop.csproj') `
+  & dotnet publish (Join-Path $root 'src/BlurLink.Shell/BlurLink.Shell.csproj') `
     -c $Configuration -r win-x64 --self-contained true `
     /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true `
     -o $pub --nologo
   if ($LASTEXITCODE -ne 0) { throw 'publish failed' }
   $dist = Join-Path $root 'dist/BlurLink-Full'
 } else {
-  & dotnet publish (Join-Path $root 'src/BlurLink.Desktop/BlurLink.Desktop.csproj') `
+  & dotnet publish (Join-Path $root 'src/BlurLink.Shell/BlurLink.Shell.csproj') `
     -c $Configuration -r win-x64 --self-contained false `
-    /p:PublishSingleFile=true `
+    /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true `
     -o $pub --nologo
   if ($LASTEXITCODE -ne 0) { throw 'publish failed' }
   $dist = Join-Path $root 'dist/BlurLink'

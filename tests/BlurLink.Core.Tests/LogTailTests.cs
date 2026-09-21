@@ -1,5 +1,3 @@
-using BlurLink.Platform;
-using BlurLink.Desktop.ViewModels;
 using BlurLink.Core.Logging;
 using Xunit;
 
@@ -140,66 +138,5 @@ public sealed class LogTailTests : IDisposable
         var withLines = LogTail.FormatForDiagnostics(@"C:\logs\helper.log", new[] { "l1", "l2" });
         Assert.Contains("l1", withLines);
         Assert.EndsWith("l2" + Environment.NewLine, withLines);
-    }
-}
-
-/// <summary>Settings-tab wiring for the helper-log viewer.</summary>
-public sealed class SettingsHelperLogTests : IDisposable
-{
-    private readonly MainViewModel _vm = new();
-
-    public SettingsHelperLogTests()
-    {
-        _vm.CurrentView = "Settings";
-        _vm.Settings.IsSettingsTabVisible = true;
-    }
-
-    public void Dispose()
-    {
-        _vm.Settings.Dispose();
-        _vm.Join.Dispose();
-        _vm.Dispose();
-    }
-
-    [Fact]
-    public void RefreshHelperLog_PopulatesStatus_WithoutThrowing()
-    {
-        _vm.Settings.RefreshHelperLog();
-        Assert.False(string.IsNullOrEmpty(_vm.Settings.HelperLogStatus));
-        // Two valid states: no helper ever ran on this machine (empty list,
-        // informative status) — or a real helper.log exists because BlurLink
-        // ran here before (dev/CI boxes that launched the app). Both must
-        // read cleanly; the old hard Assert.Empty broke on used machines.
-        if (_vm.Settings.HelperLogLines.Count == 0)
-        {
-            Assert.Contains("No helper log yet", _vm.Settings.HelperLogStatus);
-        }
-        else
-        {
-            Assert.Contains("newest last", _vm.Settings.HelperLogStatus);
-        }
-    }
-
-    [Fact]
-    public void RefreshCommand_Executes()
-    {
-        _vm.Settings.RefreshHelperLogCommand.Execute(null);
-        Assert.False(string.IsNullOrEmpty(_vm.Settings.HelperLogStatus));
-    }
-
-    [Fact]
-    public void RefreshHelperLogCommand_Exists()
-    {
-        Assert.NotNull(_vm.Settings.RefreshHelperLogCommand);
-        Assert.NotNull(_vm.Settings.CopyHelperLogCommand);
-    }
-
-    [Fact]
-    public void DefaultHelperLogPath_IsUnderLocalAppData()
-    {
-        var expected = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "BlurLink", "logs", "helper.log");
-        Assert.Equal(expected, HelperLauncher.DefaultHelperLogPath());
     }
 }

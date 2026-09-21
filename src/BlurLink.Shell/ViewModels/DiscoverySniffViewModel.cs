@@ -10,8 +10,7 @@ namespace BlurLink.Shell.ViewModels;
 /// <summary>
 /// Join tab part 2 of 3: discovery sniffing / reply listening. Never touches
 /// the settings VM directly — the detected port flows out through
-/// <c>applyPort</c>. Port of the matching <c>BlurLink.Desktop</c>
-/// <c>JoinViewModel</c> members, verbatim unless noted.
+/// <c>applyPort</c>. Port of the matching WPF <c>JoinViewModel</c> members, verbatim unless noted.
 /// </summary>
 public sealed class DiscoverySniffViewModel : ShellViewModelBase
 {

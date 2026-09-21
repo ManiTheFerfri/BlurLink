@@ -1,5 +1,3 @@
-using BlurLink.Contracts;
-using BlurLink.Desktop.ViewModels;
 using BlurLink.Platform;
 using Xunit;
 
@@ -55,32 +53,6 @@ public sealed class HelperEmbedTests
 
         Assert.False(written);
         Assert.Equal(before, File.GetLastWriteTimeUtc(dest));
-    }
-
-    [Fact]
-    public void HasEmbedded_FollowsActiveMap()
-    {
-        // The check must follow the active Platform map, not a hardcoded
-        // shell literal: point the map at a resource that really exists in
-        // the Desktop assembly (the staged helper when Native/* is present,
-        // else the always-embedded WPF g.resources) and it must read true.
-        var desktop = typeof(HostViewModel).Assembly;
-        var names = desktop.GetManifestResourceNames();
-        var helperKey = names.FirstOrDefault(n => n.EndsWith("Native.blurlink-net.exe", StringComparison.Ordinal))
-            ?? names.First(n => n.EndsWith(".g.resources", StringComparison.Ordinal));
-        var map = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            [helperKey] = BlurLinkConstants.HelperExeName,
-        };
-        try
-        {
-            HelperLauncher.ConfigureResources(desktop, map);
-            Assert.True(HelperLauncher.HasEmbeddedHelper);
-        }
-        finally
-        {
-            HelperLauncher.ConfigureResources(typeof(HelperLauncher).Assembly, HelperLauncher.DesktopEmbeddedFiles);
-        }
     }
 
     [Fact]

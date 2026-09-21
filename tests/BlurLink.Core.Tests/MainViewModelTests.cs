@@ -1,5 +1,4 @@
 using BlurLink.Platform;
-using BlurLink.Desktop.ViewModels;
 using Xunit;
 
 namespace BlurLink.Core.Tests;
@@ -12,41 +11,6 @@ namespace BlurLink.Core.Tests;
 /// </summary>
 public sealed class MainViewModelConstructionTests
 {
-    [Fact]
-    public void ConstructsCleanly_WithAdaptersLoaded()
-    {
-        var vm = new MainViewModel();
-        try
-        {
-            Assert.NotNull(vm.Join.SelectedAdapter);
-            Assert.Equal(string.Empty, vm.Join.Message);
-            Assert.Equal(7, vm.Join.PreflightItems.Count);
-            Assert.Contains(vm.Join.PreflightItems, i => i.Label == "Overlay adapter" && i.Ok);
-        }
-        finally
-        {
-            vm.Join.Dispose();
-            vm.Dispose();
-        }
-    }
-
-    [Fact]
-    public void Navigate_RefreshesAdapters_WithoutThrowing()
-    {
-        var vm = new MainViewModel();
-        try
-        {
-            vm.CurrentView = "Settings";
-            vm.RefreshAllAdapters();
-            Assert.NotEmpty(vm.Join.Adapters);
-        }
-        finally
-        {
-            vm.Join.Dispose();
-            vm.Dispose();
-        }
-    }
-
     [Fact]
     public void AdapterWatcher_StartStop_DoesNotThrow()
     {

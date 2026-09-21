@@ -3,7 +3,7 @@
 .SYNOPSIS
   Development-only packaging: stages a runnable folder under dist/.
 .DESCRIPTION
-  Copies the Desktop publish output + blurlink-net.exe + WinDivert binaries
+  Copies the Shell publish output + blurlink-net.exe + WinDivert binaries
   (when staged per third-party/WinDivert/README.md) + docs. Unsigned build:
   SmartScreen/UAC will warn — expected until binaries are code-signed.
 #>
@@ -17,9 +17,9 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root 'dist/BlurLink-dev'
 
-Write-Host "==> publish Desktop (self-contained: NO, framework-dependent)" -ForegroundColor Cyan
+Write-Host "==> publish Shell (self-contained: NO, framework-dependent)" -ForegroundColor Cyan
 $pub = Join-Path $root 'out/publish'
-& dotnet publish (Join-Path $root 'src/BlurLink.Desktop/BlurLink.Desktop.csproj') `
+& dotnet publish (Join-Path $root 'src/BlurLink.Shell/BlurLink.Shell.csproj') `
   -c $Configuration -r win-x64 --self-contained false -o $pub --nologo
 if ($LASTEXITCODE -ne 0) { throw "publish failed" }
 

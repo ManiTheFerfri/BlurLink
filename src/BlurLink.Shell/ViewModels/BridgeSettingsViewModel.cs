@@ -12,8 +12,7 @@ public sealed record PreflightItem(string Label, bool Ok);
 
 /// <summary>
 /// Join tab part 1 of 3: bridge fields and validation only. No helper IO
-/// except adapter enumeration. Port of the matching <c>BlurLink.Desktop</c>
-/// <c>JoinViewModel</c> members, verbatim unless noted.
+/// except adapter enumeration. Port of the matching WPF <c>JoinViewModel</c> members, verbatim unless noted.
 /// </summary>
 public sealed class BridgeSettingsViewModel : ShellViewModelBase
 {

@@ -12,7 +12,7 @@ namespace BlurLink.Shell.ViewModels;
 
 /// <summary>
 /// Join tab part 3 of 3: coordinator, story, session, game. Port of the
-/// matching <c>BlurLink.Desktop</c> <c>JoinViewModel</c> members, verbatim
+/// matching WPF <c>JoinViewModel</c> members, verbatim
 /// unless noted. Field validation lives on <see cref="BridgeSettingsViewModel"/>;
 /// sniffing on <see cref="DiscoverySniffViewModel"/>.
 /// </summary>
@@ -733,7 +733,7 @@ public sealed class JoinSessionViewModel : ShellViewModelBase, IDisposable
 
     /// <summary>Task 11 parity seam: the exact launch recipe (game folder as
     /// workdir, configured Blur args) as a pure value for the parity test.
-    /// WPF parity: same two lines as <c>BlurLink.Desktop</c>'s launcher.</summary>
+    /// WPF parity: same two lines as the retired WPF shell's launcher.</summary>
     internal static ProcessStartInfo BuildBlurStartInfo(BlurLinkConfig config)
     {
         var gameDir = Path.GetDirectoryName(config.BlurExePath) ?? string.Empty;

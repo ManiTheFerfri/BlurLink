@@ -38,23 +38,13 @@ public sealed class HelperLauncher : IHelperProcess
     /// <summary>
     /// Files shipped inside BlurLink.exe (portable) and staged to the bin dir:
     /// the helper plus the WinDivert runtime. Resource name → file name.
-    /// Defaults to the Desktop layout; shells re-point this at startup via
+    /// Defaults to the Shell layout; the shell re-points this at startup via
     /// <see cref="ConfigureResources"/> (portable staging silently no-ops
     /// otherwise, because this assembly itself embeds nothing).
     /// </summary>
     public static IReadOnlyDictionary<string, string> EmbeddedFiles => _resourceFiles;
 
-    /// <summary>Desktop shell layout: resources live in the Desktop assembly.</summary>
-    public static readonly IReadOnlyDictionary<string, string> DesktopEmbeddedFiles =
-        new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["BlurLink.Desktop.Native.blurlink-net.exe"] = BlurLinkConstants.HelperExeName,
-            ["BlurLink.Desktop.Native.WinDivert.dll"] = "WinDivert.dll",
-            ["BlurLink.Desktop.Native.WinDivert64.sys"] = "WinDivert64.sys",
-        };
-
-    /// <summary>Avalonia shell layout (embedded from M4; until then the keys
-    /// simply match nothing and staging no-ops, like a Desktop dev build).</summary>
+    /// <summary>Shell layout: resources live in the Shell assembly.</summary>
     public static readonly IReadOnlyDictionary<string, string> ShellEmbeddedFiles =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
@@ -68,7 +58,7 @@ public sealed class HelperLauncher : IHelperProcess
     public static System.Reflection.Assembly ResourceAssembly { get; private set; } =
         typeof(HelperLauncher).Assembly;
 
-    private static IReadOnlyDictionary<string, string> _resourceFiles = DesktopEmbeddedFiles;
+    private static IReadOnlyDictionary<string, string> _resourceFiles = ShellEmbeddedFiles;
 
     /// <summary>
     /// Points embedded-resource resolution at the calling shell's assembly and

@@ -32,7 +32,7 @@ control, and why.
   existing root-anchored `/build-native/`, `/dist/`, `publish/`,
   `TestResults/`, packaging artefacts `*.msi`/`*.msix`/`*.zip`) are
   generated artefacts. `dist/` in particular is build output.
-- **Portable packaging staging.** `src/BlurLink.Desktop/Native/` is where
+- **Portable packaging staging.** `src/BlurLink.Shell/Native/` is where
   the helper plus WinDivert are embedded at build time; it is staged,
   never committed.
 - **Editor and per-user noise.** `.vs/`, `.vscode/`, `*.user`,
@@ -96,3 +96,13 @@ plan-listed entries were appended), this file was added, and the commit
   side by side would each acquire their own mutex and double-divert. Cost if
   wrong: duplicate forwarding for upgraders. So the `Desktop` in the name is
   history, not a bug — do not "fix" it.
+
+## History note (M4 Task 4 — WPF removed at 0.3.0)
+
+  The WPF shell (`src/BlurLink.Desktop/`) was removed from the solution and
+  the disk at 0.3.0: the Avalonia Shell (`src/BlurLink.Shell/`) is the app,
+  and the portable pipeline (`scripts/build-portable.ps1`,
+  `scripts/package-release.ps1`) publishes it, embedding the helper plus the
+  WinDivert runtime from `src/BlurLink.Shell/Native/` exactly as Desktop did.
+  Desktop history is retained in git (`git log -- src/BlurLink.Desktop`);
+  the `Desktop` in the single-instance guard name stays per the R1 note above.

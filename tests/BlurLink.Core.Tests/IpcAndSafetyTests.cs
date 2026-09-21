@@ -99,38 +99,3 @@ public sealed class LoopPreventionTests
         Assert.Equal(50001, p.DiscoveryUdpPort);
     }
 }
-
-public sealed class ReplySummaryTests
-{
-    [Fact]
-    public void EmptyResults_AsksForRefresh()
-    {
-        var s = BlurLink.Desktop.ViewModels.JoinViewModel.FormatReplySummary(
-            Array.Empty<Contracts.SniffPortCount>(), "10.88.132.54");
-        Assert.Contains("No replies yet", s);
-    }
-
-    [Fact]
-    public void HostAnswer_RecognizedByIp()
-    {
-        var results = new List<Contracts.SniffPortCount>
-        {
-            new() { Port = 50001, Count = 3, SrcIp = "10.88.132.54" },
-            new() { Port = 50001, Count = 1, SrcIp = "10.9.9.9" },
-        };
-        var s = BlurLink.Desktop.ViewModels.JoinViewModel.FormatReplySummary(results, "10.88.132.54");
-        Assert.Contains("Host answered", s);
-        Assert.Contains("10.88.132.54", s);
-    }
-
-    [Fact]
-    public void ForeignAnswer_Flagged()
-    {
-        var results = new List<Contracts.SniffPortCount>
-        {
-            new() { Port = 50001, Count = 2, SrcIp = "10.9.9.9" },
-        };
-        var s = BlurLink.Desktop.ViewModels.JoinViewModel.FormatReplySummary(results, "10.88.132.54");
-        Assert.Contains("not the host", s);
-    }
-}

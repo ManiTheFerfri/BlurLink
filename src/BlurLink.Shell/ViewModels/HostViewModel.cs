@@ -29,7 +29,7 @@ public sealed class HostPlayerRow
 /// Host mode tab: run the helper in its host role so the host's Blur replies get
 /// forwarded to each player's overlay address.
 ///
-/// Port of the matching <c>BlurLink.Desktop</c> <c>HostViewModel</c> members,
+/// Port of the matching WPF <c>HostViewModel</c> members,
 /// verbatim unless noted. The hand-built <c>FormatStatus</c> sentence builder is
 /// deliberately retired (not ported): the status sentence comes only from
 /// <see cref="SessionStoryTable"/> via this VM's own coordinator (spec §7.2).
