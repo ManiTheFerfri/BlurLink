@@ -7,8 +7,14 @@
              x:DataType="vm:JoinViewModel">
   <StackPanel MaxWidth="720">
     <TextBlock Text="Join a friend's lobby" Classes="h1" Margin="0,4,0,6" />
-    <TextBlock Classes="faint" Margin="0,0,0,20"
+    <TextBlock Classes="faint" Margin="0,0,0,8"
                Text="Enter your friend's overlay IP, start the bridge, then open Blur's LAN list." />
+    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+      <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center" Fill="{StaticResource Success}" />
+      <TextBlock Text="Verified 50001" FontWeight="SemiBold" Foreground="{StaticResource Success}" VerticalAlignment="Center" />
+      <TextBlock Classes="faint" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center"
+                 Text="Discovery port fixed by evidence (capture + live lobby)." />
+    </StackPanel>
 
     <!-- ============ Connect card ============ -->
     <Border Classes="card">
@@ -40,7 +46,7 @@
         </Grid>
 
         <!-- Pre-flight checklist -->
-        <Border Margin="0,16,0,0" Padding="14,12" CornerRadius="12"
+        <Border Margin="0,12,0,0" Padding="14,12" CornerRadius="12"
                 Background="{StaticResource Sidebar}" BorderBrush="{StaticResource Border}" BorderThickness="1">
           <StackPanel>
             <StackPanel Orientation="Horizontal">
@@ -73,22 +79,26 @@
                    FontSize="12" Margin="0,10,0,0"
                    IsVisible="{Binding Settings.RouteWarning, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
 
-        <WrapPanel Margin="0,16,0,0">
+        <StackPanel Margin="0,14,0,0">
           <Button x:Name="StartStopButton" Content="Start Bridge" Command="{Binding Session.StartStopCommand}"
                   Classes="primary" Padding="30,12" FontSize="14"
                   AutomationProperties.Name="Start Bridge"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                   IsVisible="{Binding Session.ShowStart}" />
           <Button Content="Stop Bridge" Command="{Binding Session.StartStopCommand}"
                   Classes="danger" Padding="30,12" FontSize="14"
                   AutomationProperties.Name="Stop Bridge"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                   IsVisible="{Binding Session.BridgeRunning}" />
-          <Button Content="Force kill" Command="{Binding Session.ForceKillCommand}"
-                  Classes="danger"
-                  AutomationProperties.Name="Force kill"
-                  IsVisible="{Binding Session.ShowForceKill}" />
-          <Button Content="Launch Blur" Command="{Binding Session.LaunchBlurCommand}"
-                  AutomationProperties.Name="Launch Blur" />
-        </WrapPanel>
+          <WrapPanel Margin="0,12,0,0">
+            <Button Content="Force kill" Command="{Binding Session.ForceKillCommand}"
+                    Classes="danger"
+                    AutomationProperties.Name="Force kill"
+                    IsVisible="{Binding Session.ShowForceKill}" />
+            <Button Content="Launch Blur" Command="{Binding Session.LaunchBlurCommand}"
+                    AutomationProperties.Name="Launch Blur" />
+          </WrapPanel>
+        </StackPanel>
 
         <TextBlock Text="{Binding Session.Message}" Foreground="{StaticResource Accent}" Margin="0,10,0,0"
                    IsVisible="{Binding Session.Message, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
@@ -98,13 +108,10 @@
         <TextBlock Text="{Binding Sniff.RepliesSummary}" Foreground="{StaticResource Success}"
                    FontSize="12" Margin="0,2,0,0"
                    IsVisible="{Binding Sniff.RepliesSummary, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
-        <TextBlock x:Name="StoryHeadline" Text="{Binding Session.Story.Headline}" FontWeight="SemiBold" Margin="0,10,0,0" />
+        <TextBlock x:Name="StoryHeadline" Text="{Binding Session.Story.Headline}" FontWeight="SemiBold" Margin="0,8,0,0" />
         <TextBlock Text="{Binding Session.Story.Detail}" TextWrapping="Wrap" Margin="0,2,0,0" />
         <TextBlock Text="{Binding Session.Story.SuggestedAction}" TextWrapping="Wrap" Opacity="0.8" Margin="0,2,0,0"
                    IsVisible="{Binding Session.Story.SuggestedAction, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
-        <Expander Header="Counters" Margin="0,8,0,0">
-          <TextBlock Text="{Binding Session.RawCounters}" FontFamily="{StaticResource MonoFont}" />
-        </Expander>
       </StackPanel>
     </Border>
 
@@ -113,65 +120,33 @@
       <StackPanel>
         <TextBlock Text="ADVANCED" Classes="label" />
 
-        <!-- Port detector -->
-        <Border Background="{StaticResource Sidebar}" BorderBrush="{StaticResource Border}"
-                BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="0,0,0,14">
-          <StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-              <TextBlock Text="🔍" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center" />
-              <TextBlock Text="Don't know the discovery port?" FontWeight="SemiBold" VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Classes="faint" FontSize="12" Margin="0,2,0,10"
-                       Text="Listen for 15 seconds while you refresh Blur's LAN list. Nothing is changed or blocked while listening." />
-            <WrapPanel>
-              <Button Content="Detect discovery port" Command="{Binding Sniff.DetectCommand}"
-                      AutomationProperties.Name="Detect discovery port" />
-              <Button Content="Stop listening" Command="{Binding Sniff.StopSniffCommand}"
-                      AutomationProperties.Name="Stop listening" />
-              <Button Content="Listen for replies" Command="{Binding Sniff.ListenRepliesCommand}"
-                      AutomationProperties.Name="Listen for replies" />
-            </WrapPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-              <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
-                       Fill="{StaticResource Accent}"
-                       IsVisible="{Binding Sniff.SniffRunning}" />
-              <TextBlock Text="{Binding Sniff.SniffStatus}" Foreground="{StaticResource Accent}"
-                         VerticalAlignment="Center"
-                         IsVisible="{Binding Sniff.SniffStatus, Converter={x:Static conv:NonEmptyToVisibleConverter.Instance}}" />
-            </StackPanel>
-            <Button Content="{Binding Sniff.SniffCandidate, StringFormat='Use port {0}'}"
-                    Command="{Binding Sniff.ApplySniffCommand}"
-                    AutomationProperties.Name="Use detected port"
-                    IsVisible="{Binding Sniff.ShowApplySniff}"
-                    Margin="0,10,0,0" HorizontalAlignment="Left" />
-          </StackPanel>
-        </Border>
-
-        <!-- Tune fields -->
+        <!-- Fixed discovery values (Task C): the port and broadcast are fixed
+             by evidence. The VMs keep the editable properties compiled and
+             headless-tested (config import can still carry them), but the
+             view no longer edits them and the sniff section is unbound. -->
         <Grid ColumnDefinitions="*,14,*">
           <StackPanel Grid.Column="0">
             <TextBlock Text="Discovery UDP port" Classes="label" />
-            <TextBox Text="{Binding Settings.DiscoveryPort}" MaxLength="5"
-                     AutomationProperties.Name="Discovery UDP port"
-                     FontFamily="{StaticResource MonoFont}" />
+            <TextBlock Text="Discovery port 50001 (fixed)" FontFamily="{StaticResource MonoFont}" />
           </StackPanel>
           <StackPanel Grid.Column="2">
             <TextBlock Text="Broadcast destination" Classes="label" />
-            <TextBox Text="{Binding Settings.BroadcastDestination}" MaxLength="15"
-                     AutomationProperties.Name="Broadcast destination"
-                     FontFamily="{StaticResource MonoFont}" />
+            <TextBlock Text="255.255.255.255 (fixed)" FontFamily="{StaticResource MonoFont}" />
           </StackPanel>
         </Grid>
-        <TextBlock Text="Payload signature hex (optional)" Classes="label" />
-        <TextBox Text="{Binding Settings.PayloadHex}" MaxLength="191"
-                 AutomationProperties.Name="Payload signature hex"
-                 FontFamily="{StaticResource MonoFont}" />
         <CheckBox Content="Keep physical LAN working (recommended)" IsChecked="{Binding Settings.PreserveBroadcast}"
                   AutomationProperties.Name="Keep physical LAN working"
                   Margin="0,14,0,0" />
         <CheckBox Content="Stop bridge when Blur exits" IsChecked="{Binding Session.StopWhenBlurExits}"
                   AutomationProperties.Name="Stop bridge when Blur exits"
                   Margin="0,2" />
+
+        <TextBlock Text="Route details" Classes="label" Margin="1,14,0,7" />
+        <TextBlock Text="{Binding Settings.RouteDetails, Mode=OneWay}"
+                   FontFamily="{StaticResource MonoFont}" FontSize="11.5" TextWrapping="Wrap" />
+        <Expander Header="Counters" Margin="0,8,0,0">
+          <TextBlock Text="{Binding Session.RawCounters}" FontFamily="{StaticResource MonoFont}" />
+        </Expander>
 
         <TextBlock Text="Active filter" Classes="label" Margin="1,14,0,7" />
         <TextBox Text="{Binding Session.ActiveFilter, Mode=OneWay}" IsReadOnly="True"

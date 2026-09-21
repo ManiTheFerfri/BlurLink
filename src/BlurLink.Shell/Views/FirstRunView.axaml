@@ -11,7 +11,7 @@
       <TextBlock x:Name="VerifiedBadge" Text="{Binding VerifiedBadge}" FontWeight="SemiBold" VerticalAlignment="Center" />
     </StackPanel>
     <TextBlock Classes="faint" TextWrapping="Wrap"
-               Text="Four steps to your first verified bridge. Prefer to explore first? Skip — Research mode stays available as Advanced manual entry on the Join tab." />
+               Text="Four steps to your first bridge. The discovery port is fixed at 50001 (verified) — nothing to set up there. Prefer to explore first? Skip — details live on the Join tab." />
 
     <Border Classes="card">
       <StackPanel Spacing="4">
@@ -31,12 +31,12 @@
       </StackPanel>
     </Border>
 
+    <!-- Fixed-display auto-done step (Task C): no action button renders;
+         the port needs nothing from the user. -->
     <Border Classes="card">
       <StackPanel Spacing="4">
         <TextBlock Text="{Binding Steps[2].Title}" FontWeight="SemiBold" />
         <TextBlock Text="{Binding Steps[2].Detail}" Classes="faint" TextWrapping="Wrap" />
-        <Button Content="{Binding Steps[2].ActionLabel}" Command="{Binding OpenJoinCommand}"
-                AutomationProperties.Name="Verify discovery port" />
       </StackPanel>
     </Border>
 

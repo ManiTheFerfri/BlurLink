@@ -74,7 +74,7 @@
     <!-- ============ Backup & about ============ -->
     <Border Classes="card">
       <StackPanel>
-        <TextBlock Text="BACKUP &amp; RESEARCH NOTES" Classes="label" />
+        <TextBlock Text="BACKUP &amp; ABOUT" Classes="label" />
         <WrapPanel>
           <Button Content="Export settings" Command="{Binding ExportCommand}"
                   AutomationProperties.Name="Export settings" />
@@ -85,8 +85,8 @@
                  AutomationProperties.Name="Exported settings"
                  FontFamily="{StaticResource MonoFont}" FontSize="11.5" AcceptsReturn="True"
                  Margin="0,12,0,12" />
-        <TextBlock Text="{Binding ResearchSteps, Mode=OneWay}" FontSize="12"
-                   Classes="faint" TextWrapping="Wrap" />
+        <TextBlock FontSize="12" Classes="faint" TextWrapping="Wrap"
+                   Text="Discovery port is fixed at 50001 (verified by capture + live lobby) — no research setup needed." />
         <TextBlock Classes="faint" FontSize="12" Margin="0,12,0,0" TextWrapping="Wrap"
                    Text="{Binding AboutVersion, Mode=OneWay}" />
       </StackPanel>

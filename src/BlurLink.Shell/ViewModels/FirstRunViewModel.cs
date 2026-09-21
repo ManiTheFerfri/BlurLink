@@ -100,7 +100,7 @@ public sealed class FirstRunViewModel : ShellViewModelBase
                 overlayOk,
                 "Join"),
             new FirstRunStep(
-                "Verify the discovery port",
+                "Discovery port (fixed)",
                 "Discovery port is fixed at 50001 (verified).",
                 "Open Join",
                 true,

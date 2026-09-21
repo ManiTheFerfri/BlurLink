@@ -29,6 +29,7 @@ public sealed class FirstRunHeadlessTests
             Assert.False(vm.Steps[0].Done);
             Assert.False(vm.Steps[1].Done);
             Assert.True(vm.Steps[2].Done);
+            Assert.Equal("Discovery port (fixed)", vm.Steps[2].Title); // Task C: fixed-display, no action
             Assert.Equal("Discovery port is fixed at 50001 (verified).", vm.Steps[2].Detail);
             Assert.False(vm.Steps[3].Done);
             Assert.Equal("Research mode", vm.VerifiedBadge);

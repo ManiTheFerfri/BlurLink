@@ -30,9 +30,14 @@ public sealed class DiagnosticsHeadlessTests
         }
     }
 
-    [AvaloniaFact]
-    public void DisagreeingSamples_RenderTheRefusalReason()
+    [Fact]
+    public void DisagreeingSamples_SetTheRefusalReason()
     {
+        // Task C (renamed from DisagreeingSamples_RenderTheRefusalReason):
+        // the Verify section left the Diagnostics VIEW (VerifyProfileViewModel
+        // stays compiled + tested, unbound), so the same disagreeing samples
+        // now assert on the VM Result that the removed VerifyResult TextBlock
+        // used to render — same "differs" assertion, no view involved.
         var config = BlurLinkConfig.CreateDefault();
         var verify = new VerifyProfileViewModel(config, _ => { }, _ => { }, _ => { }, () => { });
         verify.Sample1 = "0F 00 00 00 00 00 00 2C 01 00 00 00 AA";
@@ -40,22 +45,7 @@ public sealed class DiagnosticsHeadlessTests
         verify.Sample3 = "0F 00 00 00 00 00 00 2C 01 00 00 00 CC";
         verify.CheckCommand.Execute(null);
 
-        var vm = new DiagnosticsViewModel(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()), verify: verify);
-        var view = new DiagnosticsView { DataContext = vm };
-        var window = new Window { Content = view };
-        window.Show();
-
-        try
-        {
-            var result = view.FindControl<TextBlock>("VerifyResult");
-            Assert.NotNull(result);
-            Assert.Contains("differs", result.Text, StringComparison.OrdinalIgnoreCase);
-        }
-        finally
-        {
-            window.Close();
-            vm.Dispose();
-        }
+        Assert.Contains("differs", verify.Result, StringComparison.OrdinalIgnoreCase);
     }
 
     [AvaloniaFact]

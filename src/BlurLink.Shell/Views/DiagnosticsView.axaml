@@ -57,34 +57,9 @@
       </StackPanel>
     </Border>
 
-    <!-- ============ Verify profile (Task 9) ============ -->
-    <Border Classes="card" IsVisible="{Binding HasVerify}">
-      <StackPanel>
-        <TextBlock Text="VERIFY PROFILE" Classes="label" />
-        <TextBlock Classes="faint" Margin="0,0,0,10" TextWrapping="Wrap"
-                   Text="Paste the first 16+ payload bytes from three Wireshark captures. The first 12 bytes must match across all three before a verified profile can be written." />
-        <TextBlock Text="Capture 1" Classes="label" />
-        <TextBox Text="{Binding Verify.Sample1}" PlaceholderText="Paste first 16+ payload bytes from Wireshark"
-                 FontFamily="{StaticResource MonoFont}" />
-        <TextBlock Text="Capture 2" Classes="label" />
-        <TextBox Text="{Binding Verify.Sample2}" PlaceholderText="Paste first 16+ payload bytes from Wireshark"
-                 FontFamily="{StaticResource MonoFont}" />
-        <TextBlock Text="Capture 3" Classes="label" />
-        <TextBox Text="{Binding Verify.Sample3}" PlaceholderText="Paste first 16+ payload bytes from Wireshark"
-                 FontFamily="{StaticResource MonoFont}" />
-        <TextBlock Text="Profile name" Classes="label" />
-        <TextBox Text="{Binding Verify.ProfileName}" MaxLength="80"
-                 AutomationProperties.Name="Profile name" />
-        <WrapPanel Margin="0,12,0,0">
-          <Button Content="Check prefix stability" Command="{Binding Verify.CheckCommand}"
-                  AutomationProperties.Name="Check prefix stability" />
-          <Button Content="Write verified profile" Command="{Binding Verify.WriteCommand}"
-                  AutomationProperties.Name="Write verified profile" />
-        </WrapPanel>
-        <TextBlock x:Name="VerifyResult" Text="{Binding Verify.Result}" TextWrapping="Wrap"
-                   Margin="0,8,0,0" />
-      </StackPanel>
-    </Border>
+    <!-- Verify-profile section removed from the VIEW (Task C): the rule
+         (Core PrefixStability), the writer, and VerifyProfileViewModel stay
+         compiled and tested — only the bound section below left the view. -->
 
     <!-- ============ Reply shape (Task 12, observe-only) ============ -->
     <Border x:Name="ReplyShapeSection" Classes="card" IsVisible="{Binding HasReplyShape}">
