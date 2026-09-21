@@ -86,3 +86,13 @@ plan-listed entries were appended), this file was added, and the commit
  executed at mirror time, verified by a clean-clone grep for the banned
  map in `scripts/check-docs-privacy.ps1`. No history rewrite happens
  before then.
+
+## History note (M4 Task 1 — R1: single-instance mutex keeps its name)
+
+  The single-instance guard stays `Local\BlurLink.Desktop.SingleInstance`
+  (`SingleInstanceGuard.DefaultName`), even though the WPF Desktop shell is
+  being retired for the Avalonia Shell at 0.3.0. Renaming it would orphan the
+  guard during upgrade overlap: an old WPF install and the new Shell running
+  side by side would each acquire their own mutex and double-divert. Cost if
+  wrong: duplicate forwarding for upgraders. So the `Desktop` in the name is
+  history, not a bug — do not "fix" it.

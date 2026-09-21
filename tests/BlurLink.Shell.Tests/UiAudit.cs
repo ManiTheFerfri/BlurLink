@@ -21,7 +21,7 @@ public static class UiAudit
                     break;
                 case TextBox t when string.IsNullOrWhiteSpace(AutomationProperties.GetName(t))
                     && string.IsNullOrWhiteSpace(t.PlaceholderText):
-                    violations.Add("TextBox without Name or Watermark");
+                    violations.Add("TextBox without Name or PlaceholderText");
                     break;
                 case ComboBox c when string.IsNullOrWhiteSpace(AutomationProperties.GetName(c)):
                     violations.Add("ComboBox without AutomationProperties.Name");

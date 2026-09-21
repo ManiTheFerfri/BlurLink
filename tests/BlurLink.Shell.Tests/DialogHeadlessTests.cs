@@ -2,7 +2,7 @@ using Avalonia.Headless.XUnit;
 using BlurLink.Shell.Views;
 using Xunit;
 
-namespace BlurLink.Core.Tests;
+namespace BlurLink.Shell.Tests;
 
 public sealed class DialogHeadlessTests
 {

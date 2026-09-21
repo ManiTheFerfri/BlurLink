@@ -427,7 +427,7 @@ public sealed class JoinSessionViewModel : ShellViewModelBase, IDisposable
         try
         {
             filter = WinDivertFilterBuilder.Build(new WinDivertFilterBuilder.FilterInput(
-                port, _config.BroadcastDestination, _settings.SelectedAdapter?.DirectedBroadcast));
+                port, _config.BroadcastDestination, _settings.SelectedAdapter?.DirectedBroadcast, _settings.SelectedAdapter?.IfIndex));
             ActiveFilter = filter;
         }
         catch (Exception ex)

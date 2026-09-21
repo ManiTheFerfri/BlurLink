@@ -6,6 +6,7 @@ using BlurLink.Core.Logging;
 using BlurLink.Core.Session;
 using BlurLink.Core.Support;
 using BlurLink.Platform;
+using BlurLink.Shell.Services;
 
 namespace BlurLink.Shell.ViewModels;
 
@@ -31,14 +32,15 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
     public bool AutoRefreshHelperLog
     {
         get => _autoRefreshHelperLog;
-        set { if (Set(ref _autoRefreshHelperLog, value)) Raise(nameof(AutoRefreshHelperLog)); }
+        set => Set(ref _autoRefreshHelperLog, value);
     }
 
     private System.Threading.Timer? _helperLogTimer;
     private int _helperLogRefreshBusy;
 
+    private bool _isVisible;
     /// <summary>Whether the diagnostics pane is the active view (set by MainVM).</summary>
-    public bool IsVisible { get; set; }
+    public bool IsVisible { get => _isVisible; set => Set(ref _isVisible, value); }
 
     /// <summary>The helper log file being tailed.</summary>
     public string LogPath => FindHelperLogPath();
@@ -194,13 +196,6 @@ public sealed class DiagnosticsViewModel : ShellViewModelBase, IDisposable
         RefreshHelperLog();
         RefreshCrashTail();
         StartHelperLogTimer();
-    }
-
-    private sealed class ThrowingPlatformServices : IPlatformServices
-    {
-        public void CopyToClipboard(string text) => throw new InvalidOperationException("No IPlatformServices was provided.");
-        public Task<string?> PickExeFileAsync(string initialPath) => throw new InvalidOperationException("No IPlatformServices was provided.");
-        public void OpenFolder(string path) => throw new InvalidOperationException("No IPlatformServices was provided.");
     }
 
     private void StartHelperLogTimer()

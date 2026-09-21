@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -55,7 +56,13 @@ public sealed class App : Application
 
     /// <summary>Task 11 (R7): static art, live text. The tooltip mirrors the
     /// session story; the menu offers Show + Copy diagnostics + Quit. Best
-    /// effort: a tray failure must never break startup.</summary>
+    /// effort: a tray failure must never break startup. The icons live in a
+    /// field so <see cref="DisposeTrayIcon"/> can hide and release them and
+    /// drop the tooltip subscription on lifetime exit / window close.</summary>
+    private TrayIcons? _trayIcons;
+    private MainViewModel? _trayViewModel;
+    private PropertyChangedEventHandler? _trayTooltipHandler;
+
     private void SetupTrayIcon(MainWindow window, MainViewModel vm)
     {
         try
@@ -81,18 +88,68 @@ public sealed class App : Application
             menu.Items.Add(copy);
             menu.Items.Add(quit);
             tray.Menu = menu;
-            TrayIcon.SetIcons(this, new TrayIcons { tray });
-            vm.PropertyChanged += (_, e) =>
+            _trayIcons = new TrayIcons { tray };
+            TrayIcon.SetIcons(this, _trayIcons);
+            _trayViewModel = vm;
+            _trayTooltipHandler = (_, e) =>
             {
                 if (e.PropertyName == nameof(MainViewModel.TrayToolTip))
                 {
                     tray.ToolTipText = vm.TrayToolTip;
                 }
             };
+            vm.PropertyChanged += _trayTooltipHandler;
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.Exit += OnAppExit;
+            }
+
+            window.Closed += OnMainWindowClosed;
         }
         catch (Exception ex)
         {
             Core.Logging.AppLog.Warn("Tray icon unavailable: " + ex.Message);
+        }
+    }
+
+    private void OnAppExit(object? sender, ControlledApplicationLifetimeExitEventArgs e) => DisposeTrayIcon();
+
+    private void OnMainWindowClosed(object? sender, EventArgs e)
+    {
+        if (sender is Window window)
+        {
+            window.Closed -= OnMainWindowClosed;
+        }
+
+        DisposeTrayIcon();
+    }
+
+    /// <summary>Drops the tooltip subscription and hides/releases the tray
+    /// icons. Runs on lifetime exit and on main-window close (either may come
+    /// first); re-entry is a no-op.</summary>
+    private void DisposeTrayIcon()
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.Exit -= OnAppExit;
+        }
+
+        if (_trayViewModel is not null && _trayTooltipHandler is not null)
+        {
+            _trayViewModel.PropertyChanged -= _trayTooltipHandler;
+        }
+
+        _trayViewModel = null;
+        _trayTooltipHandler = null;
+        if (_trayIcons is not null)
+        {
+            foreach (var icon in _trayIcons)
+            {
+                icon.Dispose();
+            }
+
+            _trayIcons.Clear();
+            _trayIcons = null;
         }
     }
 

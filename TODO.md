@@ -3,7 +3,7 @@
 ## Project decisions (do not regress)
 
 - **Slim-only shipping (2026-09-09):** the deliverable is
-  `dist/BlurLink/BlurLink.exe`, framework-dependent (~3.5 MB, needs .NET 8
+  `dist/BlurLink/BlurLink.exe`, framework-dependent (~3.5 MB, needs .NET 10
   Desktop Runtime). `build-portable.ps1` builds slim by default; `-Full`
   (self-contained, ~140 MB) and `-Sfx` are legacy fallbacks — do not build
   them unless explicitly asked.

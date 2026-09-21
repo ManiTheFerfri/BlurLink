@@ -82,7 +82,14 @@ public sealed class HelperLauncher : IHelperProcess
         _resourceFiles = files;
     }
 
-    public const string EmbeddedHelperResource = "BlurLink.Desktop.Native.blurlink-net.exe";
+    /// <summary>Resource name of the embedded helper exe, derived from the
+    /// active resource-files map (the entry staged as the helper exe) instead
+    /// of a hardcoded shell literal — so a shell's ConfigureResources call
+    /// actually switches this check. Empty when the map names no helper.</summary>
+    public static string EmbeddedHelperResource => _resourceFiles
+        .Where(kv => string.Equals(kv.Value, BlurLinkConstants.HelperExeName, StringComparison.OrdinalIgnoreCase))
+        .Select(kv => kv.Key)
+        .FirstOrDefault() ?? string.Empty;
 
     public static bool HasEmbeddedHelper
         => ResourceAssembly.GetManifestResourceNames().Contains(EmbeddedHelperResource);

@@ -21,5 +21,5 @@ BlurLink itself is MIT-licensed (see `LICENSE`).
 
 ## .NET runtime
 
-- BlurLink.Desktop targets .NET 8 (or newer). The .NET runtime is covered by
+- BlurLink.Desktop targets .NET 10 (or newer). The .NET runtime is covered by
   the MIT license (see https://github.com/dotnet/runtime/blob/main/LICENSE.TXT).

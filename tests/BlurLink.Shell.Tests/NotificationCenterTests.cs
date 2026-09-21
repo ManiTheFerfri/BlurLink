@@ -1,7 +1,7 @@
 using BlurLink.Shell.Notifications;
 using Xunit;
 
-namespace BlurLink.Core.Tests;
+namespace BlurLink.Shell.Tests;
 
 public sealed class NotificationCenterTests
 {

@@ -7,6 +7,7 @@ using BlurLink.Core.Diagnostics;
 using BlurLink.Core.Logging;
 using BlurLink.Core.Net;
 using BlurLink.Platform;
+using BlurLink.Shell.Services;
 
 namespace BlurLink.Shell.ViewModels;
 
@@ -137,13 +138,6 @@ public sealed class SettingsViewModel : ShellViewModelBase
         ExportCommand = new RelayCommand(_ => Export());
         ImportCommand = new RelayCommand(_ => Import());
         RefreshAdapters();
-    }
-
-    private sealed class ThrowingPlatformServices : IPlatformServices
-    {
-        public void CopyToClipboard(string text) => throw new InvalidOperationException("No IPlatformServices was provided.");
-        public Task<string?> PickExeFileAsync(string initialPath) => throw new InvalidOperationException("No IPlatformServices was provided.");
-        public void OpenFolder(string path) => throw new InvalidOperationException("No IPlatformServices was provided.");
     }
 
     public void RefreshFromConfig()

@@ -1,6 +1,8 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using BlurLink.Shell.ViewModels;
 
 namespace BlurLink.Shell.Views;
 
@@ -9,6 +11,9 @@ public sealed partial class DialogWindow : Window
     public DialogWindow()
     {
         AvaloniaXamlLoader.Load(this);
+        // Esc closes (Enter still hits the focused OK): code-behind binding
+        // with the existing RelayCommand, no DataContext tricks.
+        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.Escape), Command = new RelayCommand(_ => Close()) });
     }
 
     public string MessageText => this.FindControl<TextBlock>("MessageBlock")?.Text ?? string.Empty;
