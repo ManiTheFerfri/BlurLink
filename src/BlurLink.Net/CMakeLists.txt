@@ -44,6 +44,10 @@ target_link_libraries(blurlink-net PRIVATE iphlpapi ws2_32)
 
 if(MSVC)
   target_compile_options(blurlink-net PRIVATE /W4 /WX /permissive- /EHsc)
+  # The custom manifest rides in via src/app.rc (see target_sources above);
+  # without this the linker emits its own default manifest too and CVTRES
+  # fails the link with CVT1100 duplicate resource (observed on MSBuild 18.x).
+  target_link_options(blurlink-net PRIVATE "/MANIFEST:NO")
 else()
   target_compile_options(blurlink-net PRIVATE -Wall -Wextra -Werror)
 endif()
