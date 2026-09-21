@@ -29,13 +29,13 @@ on:
       - 'tools/hostsim/**'
       - '.github/workflows/driver.yml'
 
-permissions:
-  issues: write
-
 jobs:
   driver-harness:
     runs-on: windows-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
