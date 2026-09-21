@@ -33,6 +33,9 @@ jobs:
   driver-harness:
     runs-on: windows-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -47,6 +50,14 @@ jobs:
         with:
           name: driver-build-log
           path: out/driver-build.log
+      - name: File build log as issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tail = Get-Content out/driver-build.log -Tail 120 -ErrorAction SilentlyContinue
+          if (-not $tail) { $tail = '(no build log captured)' }
+          ($tail -join "`n") | gh issue create --title "CI build failure: driver helper ($env:GITHUB_SHA)" --body-file -
       - name: Build the injector
         run: |
           cmake -S tools/hostsim -B out/hostsim -DCMAKE_BUILD_TYPE=Release
